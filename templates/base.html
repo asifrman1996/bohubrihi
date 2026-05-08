@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Bohubrihi Organic Skincare{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="{{ url_for('index') }}" class="logo">
+      Bohubrihi<span>.</span>
+      <small>Organic Skincare</small>
+    </a>
+    <nav>
+      <a href="{{ url_for('index') }}" {% if request.endpoint=='index' %}class="active"{% endif %}>Home</a>
+      <a href="{{ url_for('shop') }}" {% if request.endpoint in ['shop','product_detail'] %}class="active"{% endif %}>Shop</a>
+      <a href="{{ url_for('shop') }}#about">About</a>
+      <a href="#" class="cart-btn" id="openCartBtn">
+        🛒 Cart <span class="cart-count" style="display:none">0</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<!-- Cart Sidebar -->
+<div class="cart-overlay" id="cartOverlay"></div>
+<div class="cart-sidebar" id="cartSidebar">
+  <div class="cart-header">
+    <h3>🛒 Your Cart</h3>
+    <button class="cart-close-btn" id="cartCloseBtn">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer">
+    <div class="cart-total">
+      <span>Total</span>
+      <span class="amount" id="cartTotal">0</span>
+    </div>
+    <button class="btn-checkout" id="goCheckoutBtn">Proceed to Checkout →</button>
+  </div>
+</div>
+
+{% block content %}{% endblock %}
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo">Bohubrihi<span>.</span><small>Organic Skincare</small></div>
+        <p>Pure, natural skincare crafted with love. We believe in the power of nature to nourish and heal your skin.</p>
+      </div>
+      <div>
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="{{ url_for('shop') }}?category=soaps">Soaps</a></li>
+          <li><a href="{{ url_for('shop') }}?category=face-care">Face Care</a></li>
+          <li><a href="{{ url_for('shop') }}?category=hair-care">Hair Care</a></li>
+          <li><a href="{{ url_for('shop') }}?category=body-care">Body Care</a></li>
+          <li><a href="{{ url_for('shop') }}?category=gift-sets">Gift Sets</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Help</h4>
+        <ul>
+          <li><a href="#">Shipping Info</a></li>
+          <li><a href="#">Returns</a></li>
+          <li><a href="#">Contact Us</a></li>
+          <li><a href="#">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2024 Bohubrihi Organic Skincare. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/store.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

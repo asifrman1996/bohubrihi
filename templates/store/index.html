@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Bohubrihi – Natural Organic Skincare Bangladesh{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-content">
+    <h1>Pure Nature,<br><span>Beautiful Skin</span></h1>
+    <p>Handcrafted organic skincare made with the finest natural ingredients. No chemicals, no compromises.</p>
+    <div class="hero-btns">
+      <a href="{{ url_for('shop') }}" class="btn btn-primary">🛍 Shop Now</a>
+      <a href="#featured" class="btn btn-outline">View Featured</a>
+    </div>
+  </div>
+</section>
+
+<!-- Categories -->
+<section class="categories-section">
+  <div class="categories-scroll">
+    <a href="{{ url_for('shop') }}" class="cat-chip active">
+      <span class="icon">🌿</span>
+      <span class="label">All Products</span>
+    </a>
+    {% for cat in categories %}
+    <a href="{{ url_for('shop') }}?category={{ cat.slug }}" class="cat-chip">
+      <span class="icon">{{ cat.icon }}</span>
+      <span class="label">{{ cat.name }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Featured Products -->
+<section class="section" id="featured">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">✨ <span>Featured</span> Products</h2>
+      <a href="{{ url_for('shop') }}" class="see-all">See all →</a>
+    </div>
+    <div class="product-grid">
+      {% for p in featured %}
+      <div class="product-card">
+        <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-img-wrap">
+          {% if p.image %}
+            <img src="{{ url_for('static', filename='uploads/' + p.image) }}" alt="{{ p.name }}">
+          {% else %}
+            <div class="product-img-placeholder">{{ p.category.icon }}</div>
+          {% endif %}
+          {% if p.original_price %}
+            <span class="badge-sale">SALE</span>
+          {% endif %}
+          <span class="badge-feat">★ Featured</span>
+        </a>
+        <div class="product-info">
+          <div class="product-cat">{{ p.category.name }}</div>
+          <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-name">{{ p.name }}</a>
+          {% if p.weight %}<div class="product-weight">{{ p.weight }}</div>{% endif %}
+          <div class="product-desc">{{ p.description }}</div>
+          <div class="product-footer">
+            <div class="price-wrap">
+              <span class="price">{{ p.price|int }}</span>
+              {% if p.original_price %}
+                <span class="original-price">{{ p.original_price|int }}</span>
+              {% endif %}
+            </div>
+            <button class="add-cart-btn" onclick="addToCart({{ p.id }}, '{{ p.name|replace("'", "\\'") }}', {{ p.price }}, '{{ p.image }}', '{{ p.category.name }}')">
+              + Add
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Why Bohubrihi -->
+<section style="background: linear-gradient(135deg, #f0fdfa, #f8fafc); padding: 60px 0;">
+  <div class="container">
+    <div style="text-align:center; margin-bottom:40px;">
+      <h2 class="section-title">Why Choose <span>Bohubrihi</span>?</h2>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:24px;">
+      {% for item in [
+        ('🌱','100% Organic','All ingredients are certified organic and sustainably sourced.'),
+        ('🧪','No Chemicals','Free from parabens, sulfates, and artificial fragrances.'),
+        ('🇧🇩','Made in Bangladesh','Proudly crafted locally with traditional recipes.'),
+        ('💚','Cruelty Free','Never tested on animals. Always ethical and kind.'),
+      ] %}
+      <div style="background:#fff; border-radius:16px; padding:28px 20px; text-align:center; box-shadow:var(--shadow);">
+        <div style="font-size:2.5rem; margin-bottom:12px;">{{ item[0] }}</div>
+        <h3 style="color:var(--navy); margin-bottom:8px; font-size:1rem;">{{ item[1] }}</h3>
+        <p style="color:var(--muted); font-size:.85rem; line-height:1.6;">{{ item[2] }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Shop by Category -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Shop by <span>Category</span></h2>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap:16px;">
+      {% for cat in categories %}
+      <a href="{{ url_for('shop') }}?category={{ cat.slug }}"
+         style="background:#fff; border-radius:16px; padding:28px 16px; text-align:center; box-shadow:var(--shadow); transition:all .25s; display:block; color:var(--text);"
+         onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='var(--shadow-lg)'"
+         onmouseout="this.style.transform='';this.style.boxShadow='var(--shadow)'">
+        <div style="font-size:2.5rem; margin-bottom:10px;">{{ cat.icon }}</div>
+        <div style="font-weight:700; color:var(--navy); font-size:.95rem;">{{ cat.name }}</div>
+        <div style="color:var(--muted); font-size:.8rem; margin-top:4px;">{{ cat.products|length }} products</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

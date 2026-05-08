@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login – Bohubrihi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">Bohubrihi<span>.</span></div>
+    <div class="login-sub">Admin Panel · Secure Login</div>
+    {% if error %}
+    <div class="login-error">{{ error }}</div>
+    {% endif %}
+    <form method="POST">
+      <div class="form-group" style="margin-bottom:16px; text-align:left;">
+        <label style="display:block;font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:6px;">Password</label>
+        <input type="password" name="password" placeholder="Enter admin password" autofocus required>
+      </div>
+      <button type="submit" class="login-btn">Login →</button>
+    </form>
+    <p style="margin-top:20px; font-size:.78rem; color:var(--muted);">Default password: <code>admin123</code></p>
+  </div>
+</div>
+</body>
+</html>

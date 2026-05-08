@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.name }} – Bohubrihi{% endblock %}
+
+{% block content %}
+<div class="container product-detail">
+  <!-- Breadcrumb -->
+  <div style="margin-bottom:24px; font-size:.85rem; color:var(--muted);">
+    <a href="{{ url_for('index') }}" style="color:var(--teal);">Home</a> /
+    <a href="{{ url_for('shop') }}" style="color:var(--teal);">Shop</a> /
+    <a href="{{ url_for('shop') }}?category={{ product.category.slug }}" style="color:var(--teal);">{{ product.category.name }}</a> /
+    {{ product.name }}
+  </div>
+
+  <div class="product-detail-grid">
+    <!-- Image -->
+    <div>
+      <div class="product-detail-img">
+        {% if product.image %}
+          <img src="{{ url_for('static', filename='uploads/' + product.image) }}" alt="{{ product.name }}">
+        {% else %}
+          {{ product.category.icon }}
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Info -->
+    <div class="product-detail-info">
+      <div class="cat-label">{{ product.category.icon }} {{ product.category.name }}</div>
+      <h1>{{ product.name }}</h1>
+      <div class="detail-price">{{ product.price|int }}</div>
+      {% if product.original_price %}
+        <div class="detail-orig">{{ product.original_price|int }}
+          <span style="color:var(--red); text-decoration:none; font-size:.85rem;">
+            (Save ৳{{ (product.original_price - product.price)|int }})
+          </span>
+        </div>
+      {% endif %}
+
+      <p class="detail-desc">{{ product.description }}</p>
+
+      <div class="detail-meta">
+        {% if product.weight %}
+        <p><strong>Size / Weight:</strong> {{ product.weight }}</p>
+        {% endif %}
+        <p><strong>Status:</strong>
+          {% if product.in_stock %}
+            <span class="badge badge-green">✓ In Stock</span>
+          {% else %}
+            <span class="badge badge-red">Out of Stock</span>
+          {% endif %}
+        </p>
+        {% if product.ingredients %}
+        <p><strong>Ingredients:</strong> <span style="color:var(--muted); font-size:.88rem;">{{ product.ingredients }}</span></p>
+        {% endif %}
+      </div>
+
+      {% if product.in_stock %}
+      <div class="qty-row">
+        <div class="qty-large">
+          <button class="qty-btn" id="detailQtyMinus">−</button>
+          <span class="qty-num" id="detailQty">1</span>
+          <button class="qty-btn" id="detailQtyPlus">+</button>
+        </div>
+        <button class="btn-add-large" onclick="
+          const qty = parseInt(document.getElementById('detailQty').textContent);
+          for(let i=0;i<qty;i++) addToCart({{ product.id }}, '{{ product.name|replace("'", "\\'") }}', {{ product.price }}, '{{ product.image }}', '{{ product.category.name }}');
+        ">
+          🛒 Add to Cart
+        </button>
+      </div>
+      {% else %}
+      <div style="padding:14px; background:#fee2e2; border-radius:10px; color:#991b1b; font-weight:600;">
+        Currently out of stock — check back soon!
+      </div>
+      {% endif %}
+
+      <div style="margin-top:24px; padding:16px; background:#f0fdfa; border-radius:12px;">
+        <div style="display:flex; gap:24px; flex-wrap:wrap;">
+          <span style="font-size:.85rem; color:var(--teal-dark);">🚚 Free delivery over ৳500</span>
+          <span style="font-size:.85rem; color:var(--teal-dark);">🌱 100% Organic</span>
+          <span style="font-size:.85rem; color:var(--teal-dark);">✅ Cruelty Free</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Products -->
+  {% if related %}
+  <div style="margin-top:60px;">
+    <h2 class="section-title" style="margin-bottom:24px;">More from <span>{{ product.category.name }}</span></h2>
+    <div class="product-grid">
+      {% for p in related %}
+      <div class="product-card">
+        <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-img-wrap">
+          {% if p.image %}
+            <img src="{{ url_for('static', filename='uploads/' + p.image) }}" alt="{{ p.name }}">
+          {% else %}
+            <div class="product-img-placeholder">{{ p.category.icon }}</div>
+          {% endif %}
+          {% if p.original_price %}<span class="badge-sale">SALE</span>{% endif %}
+        </a>
+        <div class="product-info">
+          <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-name">{{ p.name }}</a>
+          {% if p.weight %}<div class="product-weight">{{ p.weight }}</div>{% endif %}
+          <div class="product-footer">
+            <div class="price-wrap">
+              <span class="price">{{ p.price|int }}</span>
+              {% if p.original_price %}<span class="original-price">{{ p.original_price|int }}</span>{% endif %}
+            </div>
+            <button class="add-cart-btn" onclick="addToCart({{ p.id }}, '{{ p.name|replace("'", "\\'") }}', {{ p.price }}, '{{ p.image }}', '{{ p.category.name }}')">+ Add</button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

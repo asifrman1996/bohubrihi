@@ -1,0 +1,66 @@
+{% extends 'admin/base.html' %}
+{% block title %}Categories – Admin{% endblock %}
+{% block page_title %}Categories{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns:1fr 360px; gap:24px; align-items:start;">
+  <!-- Categories Table -->
+  <div class="admin-table-wrap">
+    <div class="admin-table-header">
+      <h3>{{ categories|length }} Categories</h3>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Icon</th>
+          <th>Name</th>
+          <th>Slug</th>
+          <th>Products</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cat in categories %}
+        <tr>
+          <td style="font-size:1.5rem;">{{ cat.icon }}</td>
+          <td style="font-weight:700; color:var(--navy);">{{ cat.name }}</td>
+          <td style="color:var(--muted); font-size:.85rem; font-family:monospace;">{{ cat.slug }}</td>
+          <td>
+            <span class="badge {% if cat.products|length > 0 %}badge-green{% else %}badge-yellow{% endif %}">
+              {{ cat.products|length }}
+            </span>
+          </td>
+          <td>
+            {% if cat.products|length == 0 %}
+            <form method="POST" action="{{ url_for('admin_delete_category', cid=cat.id) }}"
+                  onsubmit="return confirm('Delete category {{ cat.name }}?')">
+              <button type="submit" class="btn-sm btn-red">🗑 Delete</button>
+            </form>
+            {% else %}
+            <span style="color:var(--muted); font-size:.8rem;">Has products</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add Category -->
+  <div style="background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); padding:28px;">
+    <h3 style="font-size:1rem; font-weight:700; color:var(--navy); margin-bottom:20px;">➕ Add New Category</h3>
+    <form method="POST" action="{{ url_for('admin_add_category') }}">
+      <div class="form-group">
+        <label>Category Name *</label>
+        <input type="text" name="name" required placeholder="e.g. Face Serums">
+      </div>
+      <div class="form-group">
+        <label>Emoji Icon</label>
+        <input type="text" name="icon" placeholder="🌿" maxlength="4" value="🌿">
+        <small style="color:var(--muted); font-size:.78rem;">Pick an emoji that represents the category</small>
+      </div>
+      <button type="submit" class="btn btn-teal">Add Category</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

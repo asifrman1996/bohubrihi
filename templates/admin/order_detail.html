@@ -1,0 +1,77 @@
+{% extends 'admin/base.html' %}
+{% block title %}Order #{{ order.id }} – Admin{% endblock %}
+{% block page_title %}Order #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:16px;">
+  <a href="{{ url_for('admin_orders') }}" style="color:var(--teal); font-size:.9rem;">← Back to Orders</a>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 360px; gap:24px; align-items:start;">
+  <!-- Items -->
+  <div>
+    <div class="admin-table-wrap">
+      <div class="admin-table-header">
+        <h3>Ordered Items</h3>
+        <span style="font-size:.85rem; color:var(--muted);">{{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+      </div>
+      <table>
+        <thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Subtotal</th></tr></thead>
+        <tbody>
+          {% for item in order.items %}
+          <tr>
+            <td style="font-weight:600;">{{ item.name }}</td>
+            <td>৳{{ item.price|int }}</td>
+            <td>{{ item.qty }}</td>
+            <td style="font-weight:700; color:var(--teal-dark);">৳{{ (item.price * item.qty)|int }}</td>
+          </tr>
+          {% endfor %}
+          <tr style="background:#f8fafc;">
+            <td colspan="3" style="text-align:right; font-weight:700;">Total</td>
+            <td style="font-weight:800; font-size:1.1rem; color:var(--teal-dark);">৳{{ order.total|int }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    {% if order.notes %}
+    <div style="background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); padding:20px; margin-top:16px;">
+      <h4 style="color:var(--navy); margin-bottom:8px;">📝 Customer Notes</h4>
+      <p style="color:var(--muted); font-size:.9rem;">{{ order.notes }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Sidebar -->
+  <div>
+    <div style="background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); padding:24px; margin-bottom:16px;">
+      <h4 style="color:var(--navy); margin-bottom:16px;">👤 Customer</h4>
+      <div style="display:flex; flex-direction:column; gap:10px; font-size:.9rem;">
+        <div><strong style="color:var(--navy);">Name:</strong> {{ order.customer_name }}</div>
+        <div><strong style="color:var(--navy);">Phone:</strong> <a href="tel:{{ order.customer_phone }}" style="color:var(--teal);">{{ order.customer_phone }}</a></div>
+        <div><strong style="color:var(--navy);">Email:</strong> {{ order.customer_email }}</div>
+        <div><strong style="color:var(--navy);">City:</strong> {{ order.city }}</div>
+        <div><strong style="color:var(--navy);">Address:</strong> {{ order.address }}</div>
+      </div>
+    </div>
+
+    <div style="background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); padding:24px;">
+      <h4 style="color:var(--navy); margin-bottom:16px;">📋 Update Status</h4>
+      {% set sc = {'pending':'yellow','confirmed':'blue','shipped':'purple','delivered':'green','cancelled':'red'} %}
+      <div style="margin-bottom:12px;">
+        Current: <span class="badge badge-{{ sc.get(order.status,'yellow') }}">{{ order.status|title }}</span>
+      </div>
+      <form method="POST" action="{{ url_for('admin_update_order_status', oid=order.id) }}">
+        <select name="status" style="width:100%; padding:10px 12px; border:2px solid var(--border); border-radius:8px; font-size:.95rem; margin-bottom:12px; outline:none;">
+          {% for s in ['pending','confirmed','shipped','delivered','cancelled'] %}
+          <option value="{{ s }}" {% if order.status == s %}selected{% endif %}>{{ s|title }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-teal" style="width:100%; justify-content:center;">
+          💾 Update Status
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

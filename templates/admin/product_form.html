@@ -1,0 +1,111 @@
+{% extends 'admin/base.html' %}
+{% block title %}{{ 'Edit' if product else 'Add' }} Product – Admin{% endblock %}
+{% block page_title %}{{ '✏️ Edit Product' if product else '➕ Add New Product' }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:16px;">
+  <a href="{{ url_for('admin_products') }}" style="color:var(--teal); font-size:.9rem;">← Back to Products</a>
+</div>
+
+<div class="admin-form-card">
+  <form method="POST" enctype="multipart/form-data">
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Product Name *</label>
+        <input type="text" name="name" value="{{ product.name if product else '' }}" required
+               placeholder="e.g. Neem & Turmeric Soap">
+      </div>
+
+      <div class="form-group">
+        <label>Category *</label>
+        <select name="category_id" required>
+          {% for cat in categories %}
+          <option value="{{ cat.id }}" {% if product and product.category_id == cat.id %}selected{% endif %}>
+            {{ cat.icon }} {{ cat.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Weight / Size</label>
+        <input type="text" name="weight" value="{{ product.weight if product else '' }}" placeholder="e.g. 100g, 200ml">
+      </div>
+
+      <div class="form-group">
+        <label>Price (BDT) *</label>
+        <input type="number" name="price" value="{{ product.price if product else '' }}" required min="0" step="0.01"
+               placeholder="e.g. 250">
+      </div>
+
+      <div class="form-group">
+        <label>Original / MRP Price (BDT)</label>
+        <input type="number" name="original_price" value="{{ product.original_price if product and product.original_price else '' }}"
+               min="0" step="0.01" placeholder="Leave blank if no discount">
+      </div>
+
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Description</label>
+        <textarea name="description" rows="4" placeholder="Describe the product, its benefits, how to use…">{{ product.description if product else '' }}</textarea>
+      </div>
+
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Ingredients (optional)</label>
+        <input type="text" name="ingredients" value="{{ product.ingredients if product else '' }}"
+               placeholder="e.g. Neem extract, Turmeric, Coconut oil, Shea butter…">
+      </div>
+
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Product Image</label>
+        {% if product and product.image %}
+        <div class="current-img-wrap">
+          <img src="{{ url_for('static', filename='uploads/' + product.image) }}" style="width:80px; height:80px; border-radius:8px; object-fit:cover;">
+          <span style="font-size:.85rem; color:var(--muted);">Current image — upload a new one to replace</span>
+        </div>
+        {% endif %}
+        <input type="file" name="image" accept="image/*" id="imgInput"
+               style="padding:10px; background:#f8fafc; border:2px dashed var(--border); border-radius:8px;">
+        <div class="img-preview" id="imgPreview" style="display:none;">
+          <img id="previewImg" src="" alt="Preview">
+        </div>
+      </div>
+
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Options</label>
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" name="in_stock" value="1" {% if not product or product.in_stock %}checked{% endif %}>
+            In Stock
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="featured" value="1" {% if product and product.featured %}checked{% endif %}>
+            Featured on Homepage
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:12px; margin-top:8px;">
+      <button type="submit" class="btn btn-teal">
+        {{ '💾 Save Changes' if product else '➕ Add Product' }}
+      </button>
+      <a href="{{ url_for('admin_products') }}" class="btn" style="background:#e2e8f0; color:var(--navy);">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+document.getElementById('imgInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      document.getElementById('previewImg').src = ev.target.result;
+      document.getElementById('imgPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+});
+</script>
+{% endblock %}

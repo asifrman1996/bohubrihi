@@ -1,0 +1,91 @@
+{% extends 'admin/base.html' %}
+{% block title %}Products – Admin{% endblock %}
+{% block page_title %}Products{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+  <div class="filter-bar" style="margin-bottom:0;">
+    <a href="{{ url_for('admin_products') }}" class="filter-chip {% if not cat_id %}active{% endif %}">All</a>
+    {% for cat in categories %}
+    <a href="{{ url_for('admin_products') }}?cat={{ cat.id }}" class="filter-chip {% if cat_id == cat.id %}active{% endif %}">
+      {{ cat.icon }} {{ cat.name }}
+    </a>
+    {% endfor %}
+  </div>
+  <a href="{{ url_for('admin_add_product') }}" class="btn-sm btn-teal" style="white-space:nowrap;">➕ Add Product</a>
+</div>
+
+<div class="admin-table-wrap">
+  <div class="admin-table-header">
+    <h3>{{ products|length }} Product{% if products|length != 1 %}s{% endif %}</h3>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:60px;">Image</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Price</th>
+        <th>Stock</th>
+        <th>Featured</th>
+        <th style="width:160px;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in products %}
+      <tr>
+        <td>
+          <div class="td-img">
+            {% if p.image %}
+              <img src="{{ url_for('static', filename='uploads/' + p.image) }}" alt="{{ p.name }}">
+            {% else %}
+              {{ p.category.icon }}
+            {% endif %}
+          </div>
+        </td>
+        <td>
+          <div style="font-weight:700; color:var(--navy);">{{ p.name }}</div>
+          {% if p.weight %}<div style="font-size:.78rem; color:var(--muted);">{{ p.weight }}</div>{% endif %}
+        </td>
+        <td><span style="font-size:.85rem;">{{ p.category.icon }} {{ p.category.name }}</span></td>
+        <td>
+          <span style="font-weight:700; color:var(--teal-dark);">৳{{ p.price|int }}</span>
+          {% if p.original_price %}
+            <div style="font-size:.75rem; color:var(--muted); text-decoration:line-through;">৳{{ p.original_price|int }}</div>
+          {% endif %}
+        </td>
+        <td>
+          {% if p.in_stock %}
+            <span class="badge badge-green">In Stock</span>
+          {% else %}
+            <span class="badge badge-red">Out of Stock</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if p.featured %}
+            <span class="badge badge-purple">★ Yes</span>
+          {% else %}
+            <span style="color:var(--muted); font-size:.85rem;">—</span>
+          {% endif %}
+        </td>
+        <td>
+          <div style="display:flex; gap:6px;">
+            <a href="{{ url_for('admin_edit_product', pid=p.id) }}" class="btn-sm btn-navy">✏️ Edit</a>
+            <form method="POST" action="{{ url_for('admin_delete_product', pid=p.id) }}"
+                  onsubmit="return confirm('Delete {{ p.name }}? This cannot be undone.')">
+              <button type="submit" class="btn-sm btn-red">🗑</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="7" style="text-align:center; color:var(--muted); padding:48px;">
+          No products yet. <a href="{{ url_for('admin_add_product') }}" style="color:var(--teal);">Add your first product →</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

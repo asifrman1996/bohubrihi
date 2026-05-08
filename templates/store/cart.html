@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Cart – Bohubrihi{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 40px 20px;">
+  <h1 style="color:var(--navy); margin-bottom:32px;">🛒 Your Cart</h1>
+  <div id="fullCartWrap">
+    <div style="text-align:center; padding:80px 0; color:var(--muted);">
+      <div style="font-size:4rem; margin-bottom:16px;">🛒</div>
+      <h3>Your cart is empty</h3>
+      <a href="{{ url_for('shop') }}" class="btn btn-primary" style="display:inline-flex;margin-top:20px;">Shop Now</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const wrap = document.getElementById('fullCartWrap');
+  if (!cart || cart.length === 0) return;
+
+  let total = 0;
+  let rows = cart.map(item => {
+    const sub = item.price * item.qty;
+    total += sub;
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:56px;height:56px;border-radius:8px;background:#f0fdfa;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">
+          ${item.image ? `<img src="/static/uploads/${item.image}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;">` : getCatIcon(item.cat)}
+        </div>
+        <div>
+          <div style="font-weight:700;color:var(--navy);">${item.name}</div>
+          <div style="font-size:.8rem;color:var(--muted);">${item.cat || ''}</div>
+        </div>
+      </div></td>
+      <td style="font-weight:700;">৳${item.price}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="qty-btn" onclick="updateQty(${item.id},-1);location.reload()">−</button>
+          <span style="font-weight:700;min-width:20px;text-align:center;">${item.qty}</span>
+          <button class="qty-btn" onclick="updateQty(${item.id},1);location.reload()">+</button>
+        </div>
+      </td>
+      <td style="font-weight:700;color:var(--teal-dark);">৳${sub.toFixed(0)}</td>
+      <td><button class="btn-sm btn-red" onclick="removeFromCart(${item.id});location.reload()">🗑 Remove</button></td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `
+    <div class="admin-table-wrap">
+      <table>
+        <thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Subtotal</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:24px;">
+      <div style="background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;min-width:300px;">
+        <div style="display:flex;justify-content:space-between;font-size:1.2rem;font-weight:800;margin-bottom:20px;">
+          <span>Total:</span>
+          <span style="color:var(--teal-dark);">৳${total.toFixed(0)}</span>
+        </div>
+        <a href="/checkout" class="btn-checkout">Proceed to Checkout →</a>
+      </div>
+    </div>`;
+});
+</script>
+{% endblock %}

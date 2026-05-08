@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Shop – Bohubrihi Organic Skincare{% endblock %}
+
+{% block content %}
+<div style="background: var(--navy); padding: 28px 0; margin-bottom: 0;">
+  <div class="container">
+    <h1 style="color:#fff; font-size:1.8rem; font-weight:800;">
+      {% if active_cat %}{{ active_cat.icon }} {{ active_cat.name }}
+      {% elif search %}Search: "{{ search }}"
+      {% else %}🛍 All Products{% endif %}
+    </h1>
+    <p style="color:#94a3b8; margin-top:4px;">{{ products|length }} product{% if products|length != 1 %}s{% endif %} found</p>
+  </div>
+</div>
+
+<!-- Category Filter Bar -->
+<div class="categories-section" style="position:sticky; top:64px; z-index:90;">
+  <div class="categories-scroll">
+    <a href="{{ url_for('shop') }}" class="cat-chip {% if not active_cat and not search %}active{% endif %}">
+      <span class="icon">🌿</span><span class="label">All</span>
+    </a>
+    {% for cat in categories %}
+    <a href="{{ url_for('shop') }}?category={{ cat.slug }}"
+       class="cat-chip {% if active_cat and active_cat.id == cat.id %}active{% endif %}">
+      <span class="icon">{{ cat.icon }}</span>
+      <span class="label">{{ cat.name }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="container" style="padding-top:32px; padding-bottom:60px;">
+  <!-- Search -->
+  <div class="search-bar-wrap">
+    <form class="search-bar" action="{{ url_for('shop') }}" method="get">
+      {% if active_cat %}<input type="hidden" name="category" value="{{ active_cat.slug }}">{% endif %}
+      <input type="text" name="q" placeholder="Search products…" value="{{ search }}">
+      <button type="submit">🔍</button>
+    </form>
+  </div>
+
+  {% if products %}
+  <div class="product-grid">
+    {% for p in products %}
+    <div class="product-card">
+      <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-img-wrap">
+        {% if p.image %}
+          <img src="{{ url_for('static', filename='uploads/' + p.image) }}" alt="{{ p.name }}">
+        {% else %}
+          <div class="product-img-placeholder">{{ p.category.icon }}</div>
+        {% endif %}
+        {% if p.original_price %}<span class="badge-sale">SALE</span>{% endif %}
+        {% if p.featured %}<span class="badge-feat">★</span>{% endif %}
+      </a>
+      <div class="product-info">
+        <div class="product-cat">{{ p.category.name }}</div>
+        <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-name">{{ p.name }}</a>
+        {% if p.weight %}<div class="product-weight">{{ p.weight }}</div>{% endif %}
+        <div class="product-desc">{{ p.description }}</div>
+        <div class="product-footer">
+          <div class="price-wrap">
+            <span class="price">{{ p.price|int }}</span>
+            {% if p.original_price %}<span class="original-price">{{ p.original_price|int }}</span>{% endif %}
+          </div>
+          <button class="add-cart-btn" onclick="addToCart({{ p.id }}, '{{ p.name|replace("'", "\\'") }}', {{ p.price }}, '{{ p.image }}', '{{ p.category.name }}')">
+            + Add
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="text-align:center; padding:80px 20px; color:var(--muted);">
+    <div style="font-size:4rem; margin-bottom:16px;">🔍</div>
+    <h3 style="color:var(--navy); margin-bottom:8px;">No products found</h3>
+    <p>Try a different category or search term.</p>
+    <a href="{{ url_for('shop') }}" class="btn btn-primary" style="margin-top:20px; display:inline-flex;">View All Products</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

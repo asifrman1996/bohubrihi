@@ -1,0 +1,55 @@
+{% extends 'admin/base.html' %}
+{% block title %}Orders – Admin{% endblock %}
+{% block page_title %}Orders{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+  <a href="{{ url_for('admin_orders') }}" class="filter-chip {% if not status %}active{% endif %}">All Orders</a>
+  {% for s, label in [('pending','⏳ Pending'),('confirmed','✅ Confirmed'),('shipped','🚚 Shipped'),('delivered','🎉 Delivered'),('cancelled','❌ Cancelled')] %}
+  <a href="{{ url_for('admin_orders') }}?status={{ s }}" class="filter-chip {% if status == s %}active{% endif %}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<div class="admin-table-wrap">
+  <div class="admin-table-header">
+    <h3>{{ orders|length }} Order{% if orders|length != 1 %}s{% endif %}</h3>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Order #</th>
+        <th>Customer</th>
+        <th>Phone</th>
+        <th>City</th>
+        <th>Items</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Date</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in orders %}
+      {% set sc = {'pending':'yellow','confirmed':'blue','shipped':'purple','delivered':'green','cancelled':'red'} %}
+      <tr>
+        <td><strong>#{{ o.id }}</strong></td>
+        <td>{{ o.customer_name }}</td>
+        <td>{{ o.customer_phone }}</td>
+        <td>{{ o.city }}</td>
+        <td style="color:var(--muted); font-size:.85rem;">{{ o.items|length }} item(s)</td>
+        <td style="font-weight:700; color:var(--teal-dark);">৳{{ o.total|int }}</td>
+        <td><span class="badge badge-{{ sc.get(o.status,'yellow') }}">{{ o.status|title }}</span></td>
+        <td style="color:var(--muted); font-size:.85rem;">{{ o.created_at.strftime('%d %b %Y') }}</td>
+        <td><a href="{{ url_for('admin_order_detail', oid=o.id) }}" class="btn-sm btn-navy">View</a></td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="9" style="text-align:center; color:var(--muted); padding:48px;">
+          No orders found.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

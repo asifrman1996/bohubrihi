@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Order Placed – Bohubrihi{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="success-box">
+    <div class="success-icon">🎉</div>
+    <h2>Order Placed Successfully!</h2>
+    <p>Thank you, <strong>{{ order.customer_name }}</strong>!</p>
+    <p class="order-id">Order #{{ order.id }}</p>
+    <p style="margin-top:12px;">We've received your order and will contact you at <strong>{{ order.customer_phone }}</strong> to confirm delivery.</p>
+    <div style="background:#f0fdfa; border-radius:12px; padding:20px; margin:24px 0; text-align:left;">
+      <h4 style="color:var(--navy); margin-bottom:12px;">Order Details</h4>
+      {% for item in order.items %}
+      <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); font-size:.9rem;">
+        <span>{{ item.name }} × {{ item.qty }}</span>
+        <span style="font-weight:700;">৳{{ (item.price * item.qty)|int }}</span>
+      </div>
+      {% endfor %}
+      <div style="display:flex; justify-content:space-between; padding-top:12px; font-weight:800; font-size:1rem;">
+        <span>Total Paid</span>
+        <span style="color:var(--teal-dark);">৳{{ order.total|int }}</span>
+      </div>
+    </div>
+    <a href="{{ url_for('shop') }}" class="btn btn-primary" style="display:inline-flex;">Continue Shopping</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Clear cart after successful order
+  localStorage.removeItem('bbCart');
+</script>
+{% endblock %}

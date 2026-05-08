@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Checkout – Bohubrihi{% endblock %}
+
+{% block content %}
+<div style="background:var(--navy); padding:28px 0; margin-bottom:0;">
+  <div class="container">
+    <h1 style="color:#fff; font-size:1.8rem; font-weight:800;">📦 Checkout</h1>
+  </div>
+</div>
+
+<div class="container" style="padding-top:36px; padding-bottom:60px;">
+  <form method="POST" action="{{ url_for('checkout') }}" onsubmit="return prepareCheckout()">
+    <input type="hidden" name="cart_data" id="cartDataInput">
+    <div class="checkout-grid">
+      <!-- Form -->
+      <div class="checkout-form">
+        <h3 class="form-section-title">📋 Delivery Information</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" name="name" required placeholder="Your full name">
+          </div>
+          <div class="form-group">
+            <label>Phone Number *</label>
+            <input type="tel" name="phone" required placeholder="01XXXXXXXXX">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" name="email" required placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label>Full Delivery Address *</label>
+          <textarea name="address" required placeholder="House no., road, area…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>City / District *</label>
+          <input type="text" name="city" required placeholder="Dhaka">
+        </div>
+        <div class="form-group">
+          <label>Order Notes (optional)</label>
+          <textarea name="notes" placeholder="Any special instructions…"></textarea>
+        </div>
+        <button type="submit" class="btn-checkout" style="margin-top:8px;">
+          ✅ Place Order
+        </button>
+      </div>
+
+      <!-- Summary -->
+      <div class="order-summary">
+        <h3 class="form-section-title">🧾 Order Summary</h3>
+        <div id="checkoutSummary"></div>
+        <div style="margin-top:20px; padding:14px; background:#f0fdfa; border-radius:10px; font-size:.85rem; color:var(--teal-dark);">
+          🚚 Delivery charges will be confirmed after order placement.
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
