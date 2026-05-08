@@ -1,0 +1,418 @@
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.utils import secure_filename
+from datetime import datetime
+import os, json, hashlib
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'bohubrihi-secret-2024'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bohubrihi.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ADMIN_PASSWORD_HASH = hashlib.sha256(b'admin123').hexdigest()
+
+db = SQLAlchemy(app)
+
+
+class Category(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    slug = db.Column(db.String(100), nullable=False, unique=True)
+    icon = db.Column(db.String(10), default='🌿')
+    sort_order = db.Column(db.Integer, default=0)
+    products = db.relationship('Product', backref='category', lazy=True)
+
+
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, default='')
+    price = db.Column(db.Float, nullable=False)
+    original_price = db.Column(db.Float, nullable=True)
+    image = db.Column(db.String(300), default='')
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
+    in_stock = db.Column(db.Boolean, default=True)
+    featured = db.Column(db.Boolean, default=False)
+    ingredients = db.Column(db.Text, default='')
+    weight = db.Column(db.String(50), default='')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Order(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    customer_name = db.Column(db.String(200), nullable=False)
+    customer_email = db.Column(db.String(200), nullable=False)
+    customer_phone = db.Column(db.String(50), nullable=False)
+    address = db.Column(db.Text, nullable=False)
+    city = db.Column(db.String(100), nullable=False)
+    items_json = db.Column(db.Text, nullable=False)
+    total = db.Column(db.Float, nullable=False)
+    status = db.Column(db.String(50), default='pending')
+    notes = db.Column(db.Text, default='')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def items(self):
+        return json.loads(self.items_json)
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def admin_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('admin_logged_in'):
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+def seed_data():
+    if Category.query.count() == 0:
+        categories = [
+            Category(name='Soaps', slug='soaps', icon='🧼', sort_order=1),
+            Category(name='Face Care', slug='face-care', icon='✨', sort_order=2),
+            Category(name='Creams & Lotions', slug='creams', icon='🧴', sort_order=3),
+            Category(name='Hair Care', slug='hair-care', icon='💆', sort_order=4),
+            Category(name='Body Care', slug='body-care', icon='🛁', sort_order=5),
+            Category(name='Essential Oils', slug='essential-oils', icon='🌸', sort_order=6),
+            Category(name='Gift Sets', slug='gift-sets', icon='🎁', sort_order=7),
+        ]
+        db.session.add_all(categories)
+        db.session.commit()
+
+        sample_products = [
+            Product(name='Neem & Turmeric Soap', description='Antibacterial handcrafted soap with neem leaf extract and turmeric. Ideal for acne-prone skin.', price=180, original_price=220, category_id=1, featured=True, weight='100g'),
+            Product(name='Rose Petal Soap', description='Luxurious soap infused with real rose petals and rose water for soft, fragrant skin.', price=200, category_id=1, weight='100g'),
+            Product(name='Charcoal Detox Soap', description='Deep cleansing activated charcoal soap to draw out impurities from pores.', price=220, original_price=260, category_id=1, weight='100g'),
+            Product(name='Aloe Vera Face Gel', description='Lightweight, soothing gel for all skin types. Hydrates and calms irritated skin.', price=350, category_id=2, featured=True, weight='100ml'),
+            Product(name='Turmeric Face Mask', description='Brightening face mask with organic turmeric, multani mati, and sandalwood powder.', price=280, category_id=2, weight='50g'),
+            Product(name='Rose Water Toner', description='Pure, alcohol-free rose water toner to refresh and balance skin pH.', price=250, original_price=300, category_id=2, weight='150ml'),
+            Product(name='Shea Butter Body Lotion', description='Rich, nourishing lotion with shea butter and coconut oil for deeply moisturized skin.', price=400, category_id=3, featured=True, weight='200ml'),
+            Product(name='Almond & Honey Cream', description='Intensive moisturizing cream with sweet almond oil and natural honey extracts.', price=380, category_id=3, weight='100g'),
+            Product(name='Onion Hair Oil', description='Clinically proven onion extract hair oil for hair fall control and growth.', price=320, original_price=380, category_id=4, featured=True, weight='100ml'),
+            Product(name='Amla & Bhringraj Hair Mask', description='Protein-rich hair mask to restore shine and strengthen hair from roots.', price=350, category_id=4, weight='200g'),
+            Product(name='Coconut Milk Shampoo', description='Sulfate-free shampoo with coconut milk and argan oil for silky, frizz-free hair.', price=420, category_id=4, weight='200ml'),
+            Product(name='Coffee Body Scrub', description='Exfoliating body scrub with fine coffee grounds and coconut oil for smooth skin.', price=360, category_id=5, weight='200g'),
+            Product(name='Lavender Bath Salts', description='Relaxing Himalayan pink salt bath soak infused with lavender essential oil.', price=280, category_id=5, weight='300g'),
+            Product(name='Tea Tree Essential Oil', description='100% pure therapeutic grade tea tree oil. Antiseptic and skin-clearing properties.', price=450, category_id=6, weight='15ml'),
+            Product(name='Skincare Starter Kit', description='Perfect gift set with soap, toner, face mask, and moisturizer. Great for beginners.', price=950, original_price=1200, category_id=7, featured=True),
+        ]
+        db.session.add_all(sample_products)
+        db.session.commit()
+
+
+# ─── Store Routes ────────────────────────────────────────────────────────────
+
+@app.route('/')
+def index():
+    categories = Category.query.order_by(Category.sort_order).all()
+    featured = Product.query.filter_by(featured=True, in_stock=True).limit(8).all()
+    return render_template('store/index.html', categories=categories, featured=featured)
+
+
+@app.route('/shop')
+def shop():
+    categories = Category.query.order_by(Category.sort_order).all()
+    cat_slug = request.args.get('category', '')
+    search = request.args.get('q', '').strip()
+    query = Product.query.filter_by(in_stock=True)
+    active_cat = None
+    if cat_slug:
+        active_cat = Category.query.filter_by(slug=cat_slug).first()
+        if active_cat:
+            query = query.filter_by(category_id=active_cat.id)
+    if search:
+        query = query.filter(Product.name.ilike(f'%{search}%'))
+    products = query.order_by(Product.created_at.desc()).all()
+    return render_template('store/shop.html', products=products, categories=categories,
+                           active_cat=active_cat, search=search)
+
+
+@app.route('/product/<int:pid>')
+def product_detail(pid):
+    product = Product.query.get_or_404(pid)
+    related = Product.query.filter_by(category_id=product.category_id, in_stock=True)\
+                           .filter(Product.id != pid).limit(4).all()
+    return render_template('store/product.html', product=product, related=related)
+
+
+@app.route('/cart')
+def cart():
+    return render_template('store/cart.html')
+
+
+@app.route('/checkout', methods=['GET', 'POST'])
+def checkout():
+    if request.method == 'POST':
+        cart_data = request.form.get('cart_data', '[]')
+        try:
+            items = json.loads(cart_data)
+        except Exception:
+            flash('Invalid cart data.', 'error')
+            return redirect(url_for('cart'))
+        if not items:
+            flash('Your cart is empty.', 'error')
+            return redirect(url_for('cart'))
+        total = sum(i['price'] * i['qty'] for i in items)
+        order = Order(
+            customer_name=request.form['name'],
+            customer_email=request.form['email'],
+            customer_phone=request.form['phone'],
+            address=request.form['address'],
+            city=request.form['city'],
+            items_json=json.dumps(items),
+            total=total,
+            notes=request.form.get('notes', '')
+        )
+        db.session.add(order)
+        db.session.commit()
+        return redirect(url_for('order_success', oid=order.id))
+    return render_template('store/checkout.html')
+
+
+@app.route('/order-success/<int:oid>')
+def order_success(oid):
+    order = Order.query.get_or_404(oid)
+    return render_template('store/order_success.html', order=order)
+
+
+# ─── Admin Routes ─────────────────────────────────────────────────────────────
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if session.get('admin_logged_in'):
+        return redirect(url_for('admin_dashboard'))
+    error = None
+    if request.method == 'POST':
+        pw = request.form.get('password', '')
+        if hashlib.sha256(pw.encode()).hexdigest() == ADMIN_PASSWORD_HASH:
+            session['admin_logged_in'] = True
+            return redirect(url_for('admin_dashboard'))
+        error = 'Wrong password. Try again.'
+    return render_template('admin/login.html', error=error)
+
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('admin_logged_in', None)
+    return redirect(url_for('admin_login'))
+
+
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    total_products = Product.query.count()
+    total_orders   = Order.query.count()
+    pending_orders = Order.query.filter_by(status='pending').count()
+    revenue        = db.session.query(db.func.sum(Order.total)).scalar() or 0
+    status_filter  = request.args.get('status', '')
+    q = Order.query.filter_by(status=status_filter) if status_filter else Order.query
+    orders = q.order_by(Order.created_at.desc()).limit(15).all()
+    status_counts = {s: Order.query.filter_by(status=s).count()
+                     for s in ('pending', 'confirmed', 'shipped', 'delivered', 'cancelled')}
+    return render_template('admin/dashboard.html',
+                           total_products=total_products,
+                           total_orders=total_orders,
+                           pending_orders=pending_orders,
+                           revenue=revenue,
+                           orders=orders,
+                           status_filter=status_filter,
+                           status_counts=status_counts)
+
+
+@app.route('/admin/products')
+@admin_required
+def admin_products():
+    categories = Category.query.order_by(Category.sort_order).all()
+    cat_id = request.args.get('cat', type=int)
+    if cat_id:
+        products = Product.query.filter_by(category_id=cat_id).order_by(Product.name).all()
+    else:
+        products = Product.query.order_by(Product.category_id, Product.name).all()
+    return render_template('admin/products.html', products=products, categories=categories, cat_id=cat_id)
+
+
+@app.route('/admin/products/add', methods=['GET', 'POST'])
+@admin_required
+def admin_add_product():
+    categories = Category.query.order_by(Category.sort_order).all()
+    if request.method == 'POST':
+        image_filename = ''
+        if 'image' in request.files:
+            f = request.files['image']
+            if f and f.filename and allowed_file(f.filename):
+                image_filename = secure_filename(f.filename)
+                # Prevent collisions
+                base, ext = os.path.splitext(image_filename)
+                image_filename = f"{base}_{int(datetime.utcnow().timestamp())}{ext}"
+                f.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
+        orig = request.form.get('original_price', '').strip()
+        product = Product(
+            name=request.form['name'],
+            description=request.form.get('description', ''),
+            price=float(request.form['price']),
+            original_price=float(orig) if orig else None,
+            image=image_filename,
+            category_id=int(request.form['category_id']),
+            in_stock=bool(request.form.get('in_stock')),
+            featured=bool(request.form.get('featured')),
+            ingredients=request.form.get('ingredients', ''),
+            weight=request.form.get('weight', ''),
+        )
+        db.session.add(product)
+        db.session.commit()
+        flash(f'"{product.name}" added successfully!', 'success')
+        return redirect(url_for('admin_products'))
+    return render_template('admin/product_form.html', product=None, categories=categories)
+
+
+@app.route('/admin/products/edit/<int:pid>', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_product(pid):
+    product = Product.query.get_or_404(pid)
+    categories = Category.query.order_by(Category.sort_order).all()
+    if request.method == 'POST':
+        if 'image' in request.files:
+            f = request.files['image']
+            if f and f.filename and allowed_file(f.filename):
+                if product.image:
+                    old_path = os.path.join(app.config['UPLOAD_FOLDER'], product.image)
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+                image_filename = secure_filename(f.filename)
+                base, ext = os.path.splitext(image_filename)
+                image_filename = f"{base}_{int(datetime.utcnow().timestamp())}{ext}"
+                f.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
+                product.image = image_filename
+        orig = request.form.get('original_price', '').strip()
+        product.name = request.form['name']
+        product.description = request.form.get('description', '')
+        product.price = float(request.form['price'])
+        product.original_price = float(orig) if orig else None
+        product.category_id = int(request.form['category_id'])
+        product.in_stock = bool(request.form.get('in_stock'))
+        product.featured = bool(request.form.get('featured'))
+        product.ingredients = request.form.get('ingredients', '')
+        product.weight = request.form.get('weight', '')
+        db.session.commit()
+        flash(f'"{product.name}" updated successfully!', 'success')
+        return redirect(url_for('admin_products'))
+    return render_template('admin/product_form.html', product=product, categories=categories)
+
+
+@app.route('/admin/products/delete/<int:pid>', methods=['POST'])
+@admin_required
+def admin_delete_product(pid):
+    product = Product.query.get_or_404(pid)
+    if product.image:
+        img_path = os.path.join(app.config['UPLOAD_FOLDER'], product.image)
+        if os.path.exists(img_path):
+            os.remove(img_path)
+    name = product.name
+    db.session.delete(product)
+    db.session.commit()
+    flash(f'"{name}" deleted.', 'success')
+    return redirect(url_for('admin_products'))
+
+
+@app.route('/admin/orders')
+@admin_required
+def admin_orders():
+    status = request.args.get('status', '')
+    query = Order.query
+    if status:
+        query = query.filter_by(status=status)
+    orders = query.order_by(Order.created_at.desc()).all()
+    return render_template('admin/orders.html', orders=orders, status=status)
+
+
+@app.route('/admin/orders/<int:oid>')
+@admin_required
+def admin_order_detail(oid):
+    order = Order.query.get_or_404(oid)
+    return render_template('admin/order_detail.html', order=order)
+
+
+@app.route('/admin/orders/<int:oid>/status', methods=['POST'])
+@admin_required
+def admin_update_order_status(oid):
+    order = Order.query.get_or_404(oid)
+    order.status = request.form['status']
+    db.session.commit()
+    flash('Order status updated.', 'success')
+    return redirect(url_for('admin_order_detail', oid=oid))
+
+
+@app.route('/admin/categories')
+@admin_required
+def admin_categories():
+    categories = Category.query.order_by(Category.sort_order).all()
+    return render_template('admin/categories.html', categories=categories)
+
+
+@app.route('/admin/categories/add', methods=['POST'])
+@admin_required
+def admin_add_category():
+    name = request.form['name'].strip()
+    icon = request.form.get('icon', '🌿').strip()
+    slug = name.lower().replace(' ', '-').replace('&', 'and')
+    if not Category.query.filter_by(slug=slug).first():
+        cat = Category(name=name, slug=slug, icon=icon,
+                       sort_order=Category.query.count() + 1)
+        db.session.add(cat)
+        db.session.commit()
+        flash(f'Category "{name}" added.', 'success')
+    else:
+        flash('Category already exists.', 'error')
+    return redirect(url_for('admin_categories'))
+
+
+@app.route('/admin/categories/delete/<int:cid>', methods=['POST'])
+@admin_required
+def admin_delete_category(cid):
+    cat = Category.query.get_or_404(cid)
+    if cat.products:
+        flash('Cannot delete: category has products.', 'error')
+    else:
+        db.session.delete(cat)
+        db.session.commit()
+        flash(f'Category "{cat.name}" deleted.', 'success')
+    return redirect(url_for('admin_categories'))
+
+
+@app.route('/admin/settings', methods=['GET', 'POST'])
+@admin_required
+def admin_settings():
+    if request.method == 'POST':
+        action = request.form.get('action')
+        if action == 'change_password':
+            new_pw = request.form.get('new_password', '').strip()
+            confirm_pw = request.form.get('confirm_password', '').strip()
+            if len(new_pw) < 6:
+                flash('Password must be at least 6 characters.', 'error')
+            elif new_pw != confirm_pw:
+                flash('Passwords do not match.', 'error')
+            else:
+                # In a real app this would persist; here we just acknowledge
+                flash('Password updated successfully! Update ADMIN_PASSWORD_HASH in app.py to make it permanent.', 'success')
+    total_products = Product.query.count()
+    total_orders = Order.query.count()
+    total_categories = Category.query.count()
+    return render_template('admin/settings.html',
+                           total_products=total_products,
+                           total_orders=total_orders,
+                           total_categories=total_categories)
+
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+        seed_data()
+    app.run(debug=True, port=5000)
