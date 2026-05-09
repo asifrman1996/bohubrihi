@@ -177,6 +177,11 @@ def checkout():
     return render_template('store/checkout.html')
 
 
+@app.route('/about')
+def about():
+    return render_template('store/about.html')
+
+
 @app.route('/order-success/<int:oid>')
 def order_success(oid):
     order = Order.query.get_or_404(oid)

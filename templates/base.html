@@ -18,7 +18,7 @@
     <nav>
       <a href="{{ url_for('index') }}" {% if request.endpoint=='index' %}class="active"{% endif %}>Home</a>
       <a href="{{ url_for('shop') }}" {% if request.endpoint in ['shop','product_detail'] %}class="active"{% endif %}>Shop</a>
-      <a href="{{ url_for('shop') }}#about">About</a>
+      <a href="{{ url_for('about') }}" {% if request.endpoint=='about' %}class="active"{% endif %}>About</a>
       <a href="#" class="cart-btn" id="openCartBtn">
         🛒 Cart <span class="cart-count" style="display:none">0</span>
       </a>

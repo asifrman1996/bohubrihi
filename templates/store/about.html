@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}About Us – Bohubrihi Organic Skincare{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section style="background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%); padding: 72px 0; text-align: center;">
+  <div class="container">
+    <h1 style="color: #fff; font-size: 2.4rem; font-weight: 900; margin-bottom: 16px;">
+      Our Story
+    </h1>
+    <p style="color: #99f6e4; font-size: 1.1rem; max-width: 600px; margin: 0 auto; line-height: 1.7;">
+      Rooted in Bangladesh. Crafted with nature. Made for you.
+    </p>
+  </div>
+</section>
+
+<!-- Brand Story -->
+<section class="section">
+  <div class="container">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center;">
+      <div>
+        <h2 class="section-title" style="margin-bottom: 20px;">Why <span>Bohubrihi</span>?</h2>
+        <p style="color: var(--muted); line-height: 1.8; margin-bottom: 16px;">
+          Bohubrihi Organics was born from a simple belief — that the finest skincare ingredients
+          grow right here in Bangladesh. For generations, our grandmothers kept their skin radiant
+          using neem, turmeric, rose water, and coconut oil. We set out to bottle that wisdom.
+        </p>
+        <p style="color: var(--muted); line-height: 1.8; margin-bottom: 16px;">
+          Every product is handcrafted in small batches, using certified organic ingredients sourced
+          locally whenever possible. No parabens, no sulfates, no artificial fragrances — just pure
+          nature working the way it always has.
+        </p>
+        <p style="color: var(--muted); line-height: 1.8;">
+          We're proud to be a Bangladeshi brand making world-class organic skincare accessible
+          to everyone, at honest prices.
+        </p>
+      </div>
+      <div style="background: linear-gradient(135deg, #f0fdfa, #ccfbf1); border-radius: 24px;
+                  padding: 48px; text-align: center;">
+        <div style="font-size: 5rem; margin-bottom: 16px;">🌿</div>
+        <div style="font-size: 2rem; font-weight: 900; color: var(--navy);">Bohubrihi</div>
+        <div style="color: var(--teal); font-weight: 600; letter-spacing: .05em; margin-top: 4px;">ORGANIC SKINCARE</div>
+        <div style="margin-top: 24px; color: var(--muted); font-size: .9rem; line-height: 1.7;">
+          Handcrafted · Organic · Made in Bangladesh
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Values -->
+<section style="background: var(--light); padding: 60px 0;">
+  <div class="container">
+    <div style="text-align: center; margin-bottom: 40px;">
+      <h2 class="section-title">What We <span>Stand For</span></h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px;">
+      {% for icon, title, desc in [
+        ('🌱', '100% Organic', 'Every ingredient is certified organic and sustainably sourced. We work directly with local farmers to ensure the highest quality.'),
+        ('🧪', 'No Chemicals', 'Free from parabens, sulfates, SLS, and artificial fragrances. What you put on your skin matters.'),
+        ('🇧🇩', 'Made in Bangladesh', 'Proudly crafted locally using traditional Bangladeshi recipes passed down through generations.'),
+        ('💚', 'Cruelty Free', 'Never tested on animals — ever. We believe great skincare should never come at the cost of kindness.'),
+        ('♻️', 'Eco Packaging', 'Our packaging is minimal, recyclable, and designed to leave as small a footprint as possible.'),
+        ('🤝', 'Fair Trade', 'We pay fair wages to our artisans and source ingredients from farmers who earn a living wage.'),
+      ] %}
+      <div style="background: #fff; border-radius: 16px; padding: 28px 20px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 2.4rem; margin-bottom: 12px;">{{ icon }}</div>
+        <h3 style="color: var(--navy); font-size: 1rem; margin-bottom: 8px;">{{ title }}</h3>
+        <p style="color: var(--muted); font-size: .85rem; line-height: 1.6;">{{ desc }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Team -->
+<section class="section">
+  <div class="container">
+    <div style="text-align: center; margin-bottom: 40px;">
+      <h2 class="section-title">Meet the <span>Team</span></h2>
+      <p style="color: var(--muted); margin-top: 8px;">The people behind every handcrafted product.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 28px;">
+      {% for name, role, bio, emoji in [
+        ('Fatima Rahman', 'Founder & Formulator', 'Trained in organic chemistry with a passion for traditional Bangladeshi beauty recipes. She develops every formula from scratch.', '👩‍🔬'),
+        ('Karim Hossain', 'Head of Sourcing', 'Works directly with organic farmers across Sylhet and Chittagong to bring the purest raw ingredients to our workshop.', '🌾'),
+        ('Nadia Islam', 'Customer Experience', 'Ensures every order arrives perfectly and every customer question is answered with care and warmth.', '💬'),
+      ] %}
+      <div style="background: #fff; border-radius: 20px; padding: 32px 24px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 3.5rem; margin-bottom: 12px;">{{ emoji }}</div>
+        <h3 style="color: var(--navy); font-size: 1.05rem; margin-bottom: 4px;">{{ name }}</h3>
+        <div style="color: var(--teal); font-size: .85rem; font-weight: 600; margin-bottom: 12px;">{{ role }}</div>
+        <p style="color: var(--muted); font-size: .85rem; line-height: 1.6;">{{ bio }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="background: linear-gradient(135deg, #0f766e, #134e4a); padding: 60px 0; text-align: center;">
+  <div class="container">
+    <h2 style="color: #fff; font-size: 1.8rem; font-weight: 800; margin-bottom: 12px;">
+      Ready to experience pure, natural skincare?
+    </h2>
+    <p style="color: #99f6e4; margin-bottom: 28px; font-size: 1rem;">
+      Handcrafted with love. Delivered to your door.
+    </p>
+    <a href="{{ url_for('shop') }}" class="btn btn-primary"
+       style="background: #fff; color: var(--teal-dark); font-weight: 700;">
+      🛍 Shop Now
+    </a>
+  </div>
+</section>
+
+{% endblock %}
