@@ -70,6 +70,38 @@ class Order(db.Model):
         return json.loads(self.items_json)
 
 
+SLACK_BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN', '')
+SLACK_CHANNEL   = 'C0B2PQWLSR4'
+
+
+def notify_slack_order(order, items):
+    if not SLACK_BOT_TOKEN:
+        return
+    try:
+        from slack_sdk import WebClient
+        total_qty = sum(i['qty'] for i in items)
+        lines = []
+        for idx, item in enumerate(items, 1):
+            p = Product.query.get(item['id'])
+            weight = f" {p.weight}" if p and p.weight else ""
+            lines.append(f"{idx}.{item['name']}{weight} - {item['qty']} pcs")
+        text = (
+            f"#{order.id}\n\n"
+            f"Paid amount: {order.total:.0f}tk\n\n"
+            f"Name: {order.customer_name}\n\n"
+            f"Number: {order.customer_phone}\n\n"
+            f"Address:\n"
+            f"Area: {order.address}\n"
+            f"District: {order.city}\n\n"
+            f"Product list:\n"
+            + "\n".join(lines) +
+            f"\n\nTotal Products: {total_qty} pcs"
+        )
+        WebClient(token=SLACK_BOT_TOKEN).chat_postMessage(channel=SLACK_CHANNEL, text=text)
+    except Exception:
+        pass  # never let Slack errors break the order flow
+
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -211,12 +243,12 @@ def checkout():
             cat_sub[c] * 0.10 for c, q in cat_qty.items() if q >= 3
         )
         discounted = subtotal - bundle_savings
-        city = request.form.get('city', '').strip().lower()
+        zone = request.form.get('zone', '').strip().lower()
         if discounted >= 2500:
             delivery = 0
-        elif city == 'dhaka':
+        elif zone == 'dhaka':
             delivery = 70
-        elif city == 'sub-urban':
+        elif zone == 'sub-urban':
             delivery = 100
         else:
             delivery = 130
@@ -233,6 +265,7 @@ def checkout():
         )
         db.session.add(order)
         db.session.commit()
+        notify_slack_order(order, items)
         return redirect(url_for('order_success', oid=order.id))
     return render_template('store/checkout.html')
 
