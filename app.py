@@ -160,7 +160,15 @@ def checkout():
         if not items:
             flash('Your cart is empty.', 'error')
             return redirect(url_for('cart'))
-        total = sum(i['price'] * i['qty'] for i in items)
+        subtotal = sum(i['price'] * i['qty'] for i in items)
+        city = request.form.get('city', '').strip().lower()
+        if subtotal >= 1500:
+            delivery = 0
+        elif city == 'dhaka':
+            delivery = 60
+        else:
+            delivery = 120
+        total = subtotal + delivery
         order = Order(
             customer_name=request.form['name'],
             customer_email=request.form['email'],

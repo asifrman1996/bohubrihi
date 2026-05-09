@@ -35,7 +35,17 @@
         </div>
         <div class="form-group">
           <label>City / District *</label>
-          <input type="text" name="city" required placeholder="Dhaka">
+          <input type="text" name="city" id="cityInput" required placeholder="Dhaka">
+        </div>
+
+        <!-- Delivery charge info -->
+        <div style="background:#f0fdfa; border:1px solid #99f6e4; border-radius:12px; padding:14px 16px; font-size:.88rem; color:var(--teal-dark); margin-bottom:8px;">
+          <strong>🚚 Delivery Charges</strong>
+          <ul style="margin:8px 0 0 0; padding-left:18px; line-height:1.9;">
+            <li>Dhaka: <strong>৳60</strong></li>
+            <li>Outside Dhaka: <strong>৳120</strong></li>
+            <li>Free delivery on orders above <strong>৳1500</strong></li>
+          </ul>
         </div>
         <div class="form-group">
           <label>Order Notes (optional)</label>
@@ -50,11 +60,63 @@
       <div class="order-summary">
         <h3 class="form-section-title">🧾 Order Summary</h3>
         <div id="checkoutSummary"></div>
-        <div style="margin-top:20px; padding:14px; background:#f0fdfa; border-radius:10px; font-size:.85rem; color:var(--teal-dark);">
-          🚚 Delivery charges will be confirmed after order placement.
+        <div style="margin-top:12px; border-top:1px solid #e2e8f0; padding-top:12px;">
+          <div style="display:flex; justify-content:space-between; font-size:.9rem; color:var(--muted); margin-bottom:6px;">
+            <span>Subtotal</span><span id="summarySubtotal">৳0</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:.9rem; color:var(--muted); margin-bottom:10px;">
+            <span>Delivery</span><span id="summaryDelivery">—</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-weight:800; font-size:1.1rem; color:var(--navy);">
+            <span>Total</span><span id="summaryTotal">৳0</span>
+          </div>
         </div>
       </div>
     </div>
   </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function deliveryCharge(city, subtotal) {
+  if (subtotal >= 1500) return 0;
+  return city.trim().toLowerCase() === 'dhaka' ? 60 : 120;
+}
+
+function refreshSummary() {
+  const cart = JSON.parse(localStorage.getItem('bbCart') || '[]');
+  const city = document.getElementById('cityInput')?.value || '';
+  const wrap = document.getElementById('checkoutSummary');
+  if (!wrap) return;
+
+  if (cart.length === 0) {
+    wrap.innerHTML = '<p style="color:var(--muted);text-align:center;">Cart is empty</p>';
+    return;
+  }
+
+  let html = '';
+  let subtotal = 0;
+  cart.forEach(item => {
+    const sub = item.price * item.qty;
+    subtotal += sub;
+    html += `<div class="summary-item"><span>${item.name} × ${item.qty}</span><span>৳${sub.toFixed(0)}</span></div>`;
+  });
+  wrap.innerHTML = html;
+
+  const delivery = deliveryCharge(city, subtotal);
+  const total = subtotal + delivery;
+
+  document.getElementById('summarySubtotal').textContent = '৳' + subtotal.toFixed(0);
+  document.getElementById('summaryDelivery').textContent =
+    delivery === 0 ? '✅ Free' : '৳' + delivery;
+  document.getElementById('summaryTotal').textContent = '৳' + total.toFixed(0);
+  document.getElementById('cartDataInput').value = JSON.stringify(cart);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  refreshSummary();
+  document.getElementById('cityInput')?.addEventListener('input', refreshSummary);
+});
+</script>
 {% endblock %}
