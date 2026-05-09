@@ -34,17 +34,23 @@
           <textarea name="address" required placeholder="House no., road, area…"></textarea>
         </div>
         <div class="form-group">
-          <label>City / District *</label>
-          <input type="text" name="city" id="cityInput" required placeholder="Dhaka">
+          <label>Delivery Zone *</label>
+          <select name="city" id="cityInput" required>
+            <option value="">— Select zone —</option>
+            <option value="dhaka">Dhaka City</option>
+            <option value="sub-urban">Sub-urban (Narayanganj, Gazipur, Savar, Manikganj)</option>
+            <option value="outside">Outside Dhaka</option>
+          </select>
         </div>
 
         <!-- Delivery charge info -->
         <div style="background:#f0fdfa; border:1px solid #99f6e4; border-radius:12px; padding:14px 16px; font-size:.88rem; color:var(--teal-dark); margin-bottom:8px;">
           <strong>🚚 Delivery Charges</strong>
           <ul style="margin:8px 0 0 0; padding-left:18px; line-height:1.9;">
-            <li>Dhaka: <strong>৳60</strong></li>
-            <li>Outside Dhaka: <strong>৳120</strong></li>
-            <li>Free delivery on orders above <strong>৳1500</strong></li>
+            <li>Dhaka City: <strong>৳70</strong></li>
+            <li>Sub-urban: <strong>৳100</strong></li>
+            <li>Outside Dhaka: <strong>৳130</strong></li>
+            <li>Free delivery on orders above <strong>৳2500</strong></li>
           </ul>
         </div>
         <div class="form-group">
@@ -80,8 +86,11 @@
 {% block scripts %}
 <script>
 function deliveryCharge(city, subtotal) {
-  if (subtotal >= 1500) return 0;
-  return city.trim().toLowerCase() === 'dhaka' ? 60 : 120;
+  if (subtotal >= 2500) return 0;
+  if (city === 'dhaka') return 70;
+  if (city === 'sub-urban') return 100;
+  if (city === 'outside') return 130;
+  return 0;
 }
 
 function refreshSummary() {
@@ -116,7 +125,7 @@ function refreshSummary() {
 
 document.addEventListener('DOMContentLoaded', () => {
   refreshSummary();
-  document.getElementById('cityInput')?.addEventListener('input', refreshSummary);
+  document.getElementById('cityInput')?.addEventListener('change', refreshSummary);
 });
 </script>
 {% endblock %}

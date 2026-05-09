@@ -162,12 +162,14 @@ def checkout():
             return redirect(url_for('cart'))
         subtotal = sum(i['price'] * i['qty'] for i in items)
         city = request.form.get('city', '').strip().lower()
-        if subtotal >= 1500:
+        if subtotal >= 2500:
             delivery = 0
         elif city == 'dhaka':
-            delivery = 60
+            delivery = 70
+        elif city == 'sub-urban':
+            delivery = 100
         else:
-            delivery = 120
+            delivery = 130
         total = subtotal + delivery
         order = Order(
             customer_name=request.form['name'],
