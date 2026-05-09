@@ -151,11 +151,16 @@ def product_detail(pid):
     product = Product.query.get_or_404(pid)
     related = Product.query.filter_by(category_id=product.category_id, in_stock=True)\
                            .filter(Product.id != pid).limit(4).all()
+    complementary = Product.query.filter(
+        Product.category_id != product.category_id,
+        Product.in_stock == True,
+        Product.featured == True
+    ).limit(3).all()
     reviews = Review.query.filter_by(product_id=pid, approved=True)\
                           .order_by(Review.created_at.desc()).all()
     avg_rating = round(sum(r.rating for r in reviews) / len(reviews), 1) if reviews else None
     return render_template('store/product.html', product=product, related=related,
-                           reviews=reviews, avg_rating=avg_rating)
+                           complementary=complementary, reviews=reviews, avg_rating=avg_rating)
 
 
 @app.route('/product/<int:pid>/review', methods=['POST'])
@@ -195,8 +200,19 @@ def checkout():
             flash('Your cart is empty.', 'error')
             return redirect(url_for('cart'))
         subtotal = sum(i['price'] * i['qty'] for i in items)
+        # 10% bundle discount per category when 3+ items from same category
+        from collections import defaultdict
+        cat_qty = defaultdict(int)
+        cat_sub = defaultdict(float)
+        for i in items:
+            cat_qty[i.get('cat', '')] += i['qty']
+            cat_sub[i.get('cat', '')] += i['price'] * i['qty']
+        bundle_savings = sum(
+            cat_sub[c] * 0.10 for c, q in cat_qty.items() if q >= 3
+        )
+        discounted = subtotal - bundle_savings
         city = request.form.get('city', '').strip().lower()
-        if subtotal >= 2500:
+        if discounted >= 2500:
             delivery = 0
         elif city == 'dhaka':
             delivery = 70
@@ -204,7 +220,7 @@ def checkout():
             delivery = 100
         else:
             delivery = 130
-        total = subtotal + delivery
+        total = discounted + delivery
         order = Order(
             customer_name=request.form['name'],
             customer_email=request.form['email'],

@@ -70,6 +70,9 @@
           <div style="display:flex; justify-content:space-between; font-size:.9rem; color:var(--muted); margin-bottom:6px;">
             <span>Subtotal</span><span id="summarySubtotal">৳0</span>
           </div>
+          <div id="summaryBundleRow" style="display:none; justify-content:space-between; font-size:.9rem; color:#16a34a; font-weight:600; margin-bottom:6px;">
+            <span>🎁 Bundle Discount (10%)</span><span id="summaryBundleAmt">−৳0</span>
+          </div>
           <div style="display:flex; justify-content:space-between; font-size:.9rem; color:var(--muted); margin-bottom:10px;">
             <span>Delivery</span><span id="summaryDelivery">—</span>
           </div>
@@ -85,8 +88,19 @@
 
 {% block scripts %}
 <script>
-function deliveryCharge(city, subtotal) {
-  if (subtotal >= 2500) return 0;
+function bundleSavings(cart) {
+  const catQty = {}, catSub = {};
+  cart.forEach(item => {
+    catQty[item.cat] = (catQty[item.cat] || 0) + item.qty;
+    catSub[item.cat]  = (catSub[item.cat]  || 0) + item.price * item.qty;
+  });
+  let savings = 0;
+  for (const cat in catQty) { if (catQty[cat] >= 3) savings += catSub[cat] * 0.10; }
+  return savings;
+}
+
+function deliveryCharge(city, discountedSubtotal) {
+  if (discountedSubtotal >= 2500) return 0;
   if (city === 'dhaka') return 70;
   if (city === 'sub-urban') return 100;
   if (city === 'outside') return 130;
@@ -113,10 +127,19 @@ function refreshSummary() {
   });
   wrap.innerHTML = html;
 
-  const delivery = deliveryCharge(city, subtotal);
-  const total = subtotal + delivery;
+  const savings  = bundleSavings(cart);
+  const discounted = subtotal - savings;
+  const delivery = deliveryCharge(city, discounted);
+  const total    = discounted + delivery;
 
   document.getElementById('summarySubtotal').textContent = '৳' + subtotal.toFixed(0);
+  const bundleRow = document.getElementById('summaryBundleRow');
+  if (savings > 0) {
+    bundleRow.style.display = 'flex';
+    document.getElementById('summaryBundleAmt').textContent = '−৳' + savings.toFixed(0);
+  } else {
+    bundleRow.style.display = 'none';
+  }
   document.getElementById('summaryDelivery').textContent =
     delivery === 0 ? '✅ Free' : '৳' + delivery;
   document.getElementById('summaryTotal').textContent = '৳' + total.toFixed(0);

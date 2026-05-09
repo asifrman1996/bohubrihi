@@ -82,9 +82,19 @@
       </div>
       {% endif %}
 
-      <div style="margin-top:24px; padding:16px; background:#f0fdfa; border-radius:12px;">
+      {% if related %}
+      <div style="margin-top:16px; padding:14px 16px; background:linear-gradient(135deg,#fef9c3,#fef3c7);
+                  border:1px solid #fcd34d; border-radius:12px;">
+        <strong style="color:#92400e;">🎁 Bundle Deal</strong>
+        <span style="color:#78350f; display:block; margin-top:4px; font-size:.88rem;">
+          Add 3 or more <strong>{{ product.category.name }}</strong> items to your cart and get <strong>10% off</strong> that category automatically at checkout.
+        </span>
+      </div>
+      {% endif %}
+
+      <div style="margin-top:16px; padding:16px; background:#f0fdfa; border-radius:12px;">
         <div style="display:flex; gap:24px; flex-wrap:wrap;">
-          <span style="font-size:.85rem; color:var(--teal-dark);">🚚 Free delivery over ৳500</span>
+          <span style="font-size:.85rem; color:var(--teal-dark);">🚚 Free delivery over ৳2500</span>
           <span style="font-size:.85rem; color:var(--teal-dark);">🌱 100% Organic</span>
           <span style="font-size:.85rem; color:var(--teal-dark);">✅ Cruelty Free</span>
         </div>
@@ -167,10 +177,16 @@
     </div>
   </div>
 
-  <!-- Related Products -->
+  <!-- More from same category -->
   {% if related %}
-  <div style="margin-top:60px;">
-    <h2 class="section-title" style="margin-bottom:24px;">More from <span>{{ product.category.name }}</span></h2>
+  <div style="margin-top:64px; background:var(--light); border-radius:20px; padding:36px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+      <h2 class="section-title" style="margin:0;">More from <span>{{ product.category.name }}</span></h2>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:.82rem; color:var(--muted);">🎁 Buy 3+ items in this category → save 10%</span>
+        <a href="{{ url_for('shop') }}?category={{ product.category.slug }}" class="btn-sm btn-ghost">See all →</a>
+      </div>
+    </div>
     <div class="product-grid">
       {% for p in related %}
       <div class="product-card">
@@ -183,6 +199,43 @@
           {% if p.original_price %}<span class="badge-sale">SALE</span>{% endif %}
         </a>
         <div class="product-info">
+          <div class="product-cat">{{ p.category.name }}</div>
+          <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-name">{{ p.name }}</a>
+          {% if p.weight %}<div class="product-weight">{{ p.weight }}</div>{% endif %}
+          <div class="product-footer">
+            <div class="price-wrap">
+              <span class="price">{{ p.price|int }}</span>
+              {% if p.original_price %}<span class="original-price">{{ p.original_price|int }}</span>{% endif %}
+            </div>
+            <button class="add-cart-btn" onclick="addToCart({{ p.id }}, '{{ p.name|replace("'", "\\'") }}', {{ p.price }}, '{{ p.image }}', '{{ p.category.name }}')">+ Add</button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Complete the Set -->
+  {% if complementary %}
+  <div style="margin-top:48px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+      <h2 class="section-title" style="margin:0;">Complete the <span>Set</span></h2>
+      <a href="{{ url_for('shop') }}" class="btn-sm btn-ghost">Browse all →</a>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:20px;">
+      {% for p in complementary %}
+      <div class="product-card" style="border:2px solid #f0fdfa;">
+        <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-img-wrap">
+          {% if p.image %}
+            <img src="{{ url_for('static', filename='uploads/' + p.image) }}" alt="{{ p.name }}">
+          {% else %}
+            <div class="product-img-placeholder">{{ p.category.icon }}</div>
+          {% endif %}
+          <span class="badge-feat">✦ Pairs Well</span>
+        </a>
+        <div class="product-info">
+          <div class="product-cat">{{ p.category.icon }} {{ p.category.name }}</div>
           <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-name">{{ p.name }}</a>
           {% if p.weight %}<div class="product-weight">{{ p.weight }}</div>{% endif %}
           <div class="product-footer">
