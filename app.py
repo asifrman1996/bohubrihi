@@ -2,7 +2,14 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 from datetime import datetime
-import os, json, hashlib
+import os, json, hashlib, sys
+
+try:
+    from slack_sdk import WebClient as SlackClient
+    from slack_sdk.errors import SlackApiError
+except ImportError:
+    SlackClient = None
+    SlackApiError = Exception
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'bohubrihi-secret-2024'
@@ -75,10 +82,13 @@ SLACK_CHANNEL   = 'C0B2PQWLSR4'
 
 
 def notify_slack_order(order, items):
+    if not SlackClient:
+        print("Slack: slack_sdk not installed", file=sys.stderr)
+        return
     if not SLACK_BOT_TOKEN:
+        print("Slack: SLACK_BOT_TOKEN env var not set", file=sys.stderr)
         return
     try:
-        from slack_sdk import WebClient
         total_qty = sum(i['qty'] for i in items)
         lines = []
         for idx, item in enumerate(items, 1):
@@ -97,9 +107,10 @@ def notify_slack_order(order, items):
             + "\n".join(lines) +
             f"\n\nTotal Products: {total_qty} pcs"
         )
-        WebClient(token=SLACK_BOT_TOKEN).chat_postMessage(channel=SLACK_CHANNEL, text=text)
-    except Exception:
-        pass  # never let Slack errors break the order flow
+        SlackClient(token=SLACK_BOT_TOKEN).chat_postMessage(channel=SLACK_CHANNEL, text=text)
+        print(f"Slack: order #{order.id} notification sent", file=sys.stderr)
+    except Exception as e:
+        print(f"Slack error for order #{order.id}: {e}", file=sys.stderr)
 
 
 def allowed_file(filename):
