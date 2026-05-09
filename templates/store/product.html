@@ -27,6 +27,14 @@
     <div class="product-detail-info">
       <div class="cat-label">{{ product.category.icon }} {{ product.category.name }}</div>
       <h1>{{ product.name }}</h1>
+      {% if avg_rating %}
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <span style="color:#f59e0b; font-size:1.1rem; letter-spacing:1px;">
+          {% for i in range(1, 6) %}{{ '★' if i <= avg_rating|round else '☆' }}{% endfor %}
+        </span>
+        <span style="color:var(--muted); font-size:.88rem;">{{ avg_rating }} · {{ reviews|length }} review{{ 's' if reviews|length != 1 }}</span>
+      </div>
+      {% endif %}
       <div class="detail-price">{{ product.price|int }}</div>
       {% if product.original_price %}
         <div class="detail-orig">{{ product.original_price|int }}
@@ -84,6 +92,81 @@
     </div>
   </div>
 
+  <!-- Reviews -->
+  <div style="margin-top:60px;">
+    <h2 class="section-title" style="margin-bottom:28px;">Customer <span>Reviews</span></h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div style="padding:12px 16px; border-radius:10px; margin-bottom:16px;
+                    background:{{ '#f0fdfa' if cat=='success' else '#fef2f2' }};
+                    color:{{ '#0f766e' if cat=='success' else '#b91c1c' }}; font-weight:600;">
+          {{ msg }}
+        </div>
+      {% endfor %}
+    {% endwith %}
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:start;">
+
+      <!-- Review list -->
+      <div>
+        {% if reviews %}
+          {% for r in reviews %}
+          <div style="background:#fff; border-radius:14px; padding:20px; margin-bottom:16px; box-shadow:var(--shadow);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong style="color:var(--navy);">{{ r.customer_name }}</strong>
+              <span style="color:#f59e0b; font-size:1rem; letter-spacing:1px;">
+                {% for i in range(1, 6) %}{{ '★' if i <= r.rating else '☆' }}{% endfor %}
+              </span>
+            </div>
+            {% if r.comment %}
+            <p style="color:var(--muted); font-size:.9rem; line-height:1.6; margin:0;">{{ r.comment }}</p>
+            {% endif %}
+            <div style="color:var(--muted); font-size:.78rem; margin-top:8px;">{{ r.created_at.strftime('%d %b %Y') }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div style="padding:32px; text-align:center; color:var(--muted); background:#f8fafc; border-radius:14px;">
+            <div style="font-size:2.5rem; margin-bottom:8px;">💬</div>
+            <p>No reviews yet. Be the first!</p>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Submit form -->
+      <div style="background:#f8fafc; border-radius:16px; padding:28px;">
+        <h3 style="color:var(--navy); font-size:1rem; font-weight:800; margin-bottom:20px;">Leave a Review</h3>
+        <form method="POST" action="{{ url_for('submit_review', pid=product.id) }}">
+          <div class="form-group" style="margin-bottom:14px;">
+            <label style="font-size:.85rem; font-weight:600; color:var(--navy); display:block; margin-bottom:6px;">Your Name *</label>
+            <input type="text" name="customer_name" required placeholder="e.g. Fatima R."
+                   style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:.9rem; box-sizing:border-box;">
+          </div>
+          <div class="form-group" style="margin-bottom:14px;">
+            <label style="font-size:.85rem; font-weight:600; color:var(--navy); display:block; margin-bottom:8px;">Rating *</label>
+            <div id="starPicker" style="display:flex; gap:6px; font-size:1.8rem; cursor:pointer; color:#d1d5db;">
+              {% for i in range(1, 6) %}
+              <span data-val="{{ i }}" style="transition:color .15s;">★</span>
+              {% endfor %}
+            </div>
+            <input type="hidden" name="rating" id="ratingInput" value="">
+          </div>
+          <div class="form-group" style="margin-bottom:18px;">
+            <label style="font-size:.85rem; font-weight:600; color:var(--navy); display:block; margin-bottom:6px;">Comment (optional)</label>
+            <textarea name="comment" rows="3" placeholder="Share your experience…"
+                      style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:.9rem; resize:vertical; box-sizing:border-box;"></textarea>
+          </div>
+          <button type="submit"
+                  style="background:var(--teal); color:#fff; border:none; padding:12px 28px;
+                         border-radius:10px; font-weight:700; font-size:.95rem; cursor:pointer; width:100%;">
+            Submit Review
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Related Products -->
   {% if related %}
   <div style="margin-top:60px;">
@@ -116,4 +199,23 @@
   </div>
   {% endif %}
 </div>
+
+{% block scripts %}
+<script>
+(function () {
+  const stars = document.querySelectorAll('#starPicker span');
+  const input = document.getElementById('ratingInput');
+  if (!stars.length) return;
+  stars.forEach(s => {
+    s.addEventListener('mouseover', () => highlight(+s.dataset.val));
+    s.addEventListener('mouseout',  () => highlight(+input.value || 0));
+    s.addEventListener('click',     () => { input.value = s.dataset.val; highlight(+s.dataset.val); });
+  });
+  function highlight(n) {
+    stars.forEach(s => s.style.color = +s.dataset.val <= n ? '#f59e0b' : '#d1d5db');
+  }
+})();
+</script>
+{% endblock %}
+
 {% endblock %}

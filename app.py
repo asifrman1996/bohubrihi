@@ -39,6 +39,17 @@ class Product(db.Model):
     ingredients = db.Column(db.Text, default='')
     weight = db.Column(db.String(50), default='')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    reviews = db.relationship('Review', backref='product', lazy=True)
+
+
+class Review(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    customer_name = db.Column(db.String(100), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text, default='')
+    approved = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 class Order(db.Model):
@@ -140,7 +151,30 @@ def product_detail(pid):
     product = Product.query.get_or_404(pid)
     related = Product.query.filter_by(category_id=product.category_id, in_stock=True)\
                            .filter(Product.id != pid).limit(4).all()
-    return render_template('store/product.html', product=product, related=related)
+    reviews = Review.query.filter_by(product_id=pid, approved=True)\
+                          .order_by(Review.created_at.desc()).all()
+    avg_rating = round(sum(r.rating for r in reviews) / len(reviews), 1) if reviews else None
+    return render_template('store/product.html', product=product, related=related,
+                           reviews=reviews, avg_rating=avg_rating)
+
+
+@app.route('/product/<int:pid>/review', methods=['POST'])
+def submit_review(pid):
+    Product.query.get_or_404(pid)
+    name = request.form.get('customer_name', '').strip()
+    try:
+        rating = int(request.form.get('rating', 0))
+    except ValueError:
+        rating = 0
+    comment = request.form.get('comment', '').strip()
+    if not name or not 1 <= rating <= 5:
+        flash('Please provide your name and a star rating.', 'error')
+        return redirect(url_for('product_detail', pid=pid))
+    db.session.add(Review(product_id=pid, customer_name=name,
+                          rating=rating, comment=comment))
+    db.session.commit()
+    flash('Thank you! Your review will appear after approval.', 'success')
+    return redirect(url_for('product_detail', pid=pid))
 
 
 @app.route('/cart')
@@ -363,6 +397,33 @@ def admin_update_order_status(oid):
     db.session.commit()
     flash('Order status updated.', 'success')
     return redirect(url_for('admin_order_detail', oid=oid))
+
+
+@app.route('/admin/reviews')
+@admin_required
+def admin_reviews():
+    reviews = Review.query.order_by(Review.created_at.desc()).all()
+    return render_template('admin/reviews.html', reviews=reviews)
+
+
+@app.route('/admin/reviews/<int:rid>/approve', methods=['POST'])
+@admin_required
+def admin_approve_review(rid):
+    review = Review.query.get_or_404(rid)
+    review.approved = not review.approved
+    db.session.commit()
+    flash('Review ' + ('approved.' if review.approved else 'hidden.'), 'success')
+    return redirect(url_for('admin_reviews'))
+
+
+@app.route('/admin/reviews/<int:rid>/delete', methods=['POST'])
+@admin_required
+def admin_delete_review(rid):
+    review = Review.query.get_or_404(rid)
+    db.session.delete(review)
+    db.session.commit()
+    flash('Review deleted.', 'success')
+    return redirect(url_for('admin_reviews'))
 
 
 @app.route('/admin/categories')

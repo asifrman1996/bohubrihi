@@ -1,0 +1,89 @@
+{% extends 'admin/base.html' %}
+{% block title %}Reviews – Admin{% endblock %}
+{% block page_title %}Customer Reviews{% endblock %}
+
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+  <div>
+    <span class="badge badge-teal" style="font-size:.9rem; padding:6px 14px;">{{ reviews|length }} total</span>
+    <span class="badge badge-green" style="font-size:.9rem; padding:6px 14px; margin-left:6px;">
+      {{ reviews|selectattr('approved')|list|length }} approved
+    </span>
+    <span class="badge badge-yellow" style="font-size:.9rem; padding:6px 14px; margin-left:6px;">
+      {{ reviews|rejectattr('approved')|list|length }} pending
+    </span>
+  </div>
+</div>
+
+<div class="admin-table-wrap">
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:50px;">#</th>
+          <th>Product</th>
+          <th>Customer</th>
+          <th style="width:90px;">Rating</th>
+          <th>Comment</th>
+          <th style="width:100px;">Date</th>
+          <th style="width:80px;">Status</th>
+          <th style="width:130px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reviews %}
+        <tr style="{{ 'opacity:.6;' if not r.approved }}">
+          <td style="color:var(--muted); font-size:.82rem;">{{ r.id }}</td>
+          <td>
+            <a href="{{ url_for('product_detail', pid=r.product_id) }}" target="_blank"
+               style="color:var(--teal-dark); font-weight:600; font-size:.88rem;">
+              {{ r.product.name }}
+            </a>
+          </td>
+          <td style="font-weight:600; color:var(--navy); font-size:.88rem;">{{ r.customer_name }}</td>
+          <td>
+            <span style="color:#f59e0b; font-size:1rem; letter-spacing:1px;">
+              {% for i in range(1, 6) %}{{ '★' if i <= r.rating else '☆' }}{% endfor %}
+            </span>
+            <span style="color:var(--muted); font-size:.78rem; display:block;">({{ r.rating }}/5)</span>
+          </td>
+          <td style="color:var(--muted); font-size:.85rem; max-width:220px;">
+            {{ r.comment[:100] }}{{ '…' if r.comment|length > 100 }}
+          </td>
+          <td style="color:var(--muted); font-size:.82rem; white-space:nowrap;">{{ r.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            {% if r.approved %}
+              <span class="badge badge-green">Approved</span>
+            {% else %}
+              <span class="badge badge-yellow">Pending</span>
+            {% endif %}
+          </td>
+          <td style="white-space:nowrap;">
+            <form method="POST" action="{{ url_for('admin_approve_review', rid=r.id) }}" style="display:inline;">
+              <button type="submit" class="btn-sm {{ 'btn-ghost' if r.approved else 'btn-teal' }}"
+                      style="padding:4px 10px; font-size:.78rem;">
+                {{ 'Hide' if r.approved else 'Approve' }}
+              </button>
+            </form>
+            <form method="POST" action="{{ url_for('admin_delete_review', rid=r.id) }}" style="display:inline; margin-left:4px;"
+                  onsubmit="return confirm('Delete this review?')">
+              <button type="submit" class="btn-sm btn-ghost"
+                      style="padding:4px 10px; font-size:.78rem; color:#dc2626;">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" style="text-align:center; padding:48px 20px; color:var(--muted);">
+            <div style="font-size:2rem; margin-bottom:8px;">💬</div>
+            No reviews yet.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
