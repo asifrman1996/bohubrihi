@@ -21,6 +21,11 @@
         <strong>Bohubrihi</strong>
         <small>Admin Panel</small>
       </div>
+      <button class="sidebar-toggle" id="sidebarToggleBtn" title="Collapse sidebar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
     </div>
 
     <!-- Navigation -->
@@ -149,9 +154,11 @@
 
 <script>
 (function () {
-  const sidebar = document.getElementById('adminSidebar');
-  const overlay = document.getElementById('sidebarOverlay');
-  const hambBtn = document.getElementById('hamburgerBtn');
+  const sidebar    = document.getElementById('adminSidebar');
+  const overlay    = document.getElementById('sidebarOverlay');
+  const hambBtn    = document.getElementById('hamburgerBtn');
+  const toggleBtn  = document.getElementById('sidebarToggleBtn');
+  const mainEl     = document.querySelector('.admin-main');
 
   /* ── Mobile drawer ── */
   function openDrawer()  {
@@ -168,6 +175,20 @@
   overlay?.addEventListener('click', closeDrawer);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
   window.addEventListener('resize', () => { if (window.innerWidth > 768) closeDrawer(); });
+
+  /* ── Desktop collapse toggle ── */
+  function applyCollapse(collapsed) {
+    sidebar.classList.toggle('collapsed', collapsed);
+    mainEl?.classList.toggle('sidebar-collapsed', collapsed);
+  }
+  // Restore saved preference
+  applyCollapse(localStorage.getItem('sidebarCollapsed') === '1');
+
+  toggleBtn?.addEventListener('click', () => {
+    const next = !sidebar.classList.contains('collapsed');
+    localStorage.setItem('sidebarCollapsed', next ? '1' : '0');
+    applyCollapse(next);
+  });
 
   /* ── Topbar date ── */
   const dateEl = document.getElementById('topbarDate');
