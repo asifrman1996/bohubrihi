@@ -13,7 +13,10 @@ except ImportError:
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'bohubrihi-secret-2024'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bohubrihi.db'
+_db_url = os.environ.get('DATABASE_URL', 'sqlite:///bohubrihi.db')
+if _db_url.startswith('postgres://'):
+    _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = _db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
