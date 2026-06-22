@@ -1,8 +1,8 @@
 /* ── Bohubrihi Brand Palette ─────────────────────────────────── */
 :root {
-  --teal:      #20B2AA;
-  --teal-dark: #1a9e96;
-  --teal-dim:  rgba(32,178,170,.12);
+  --teal:      #00897B;
+  --teal-dark: #00695C;
+  --teal-dim:  rgba(0,137,123,.12);
   --navy:      #001F3F;
   --navy-mid:  #0a3460;
   --lime:      #ADFF2F;
@@ -433,7 +433,7 @@ footer ul li a:hover { color: #fff; }
   display: flex; align-items: center; justify-content: center;
   font-size: .92rem; font-weight: 900; color: #fff;
   flex-shrink: 0; letter-spacing: -0.5px;
-  box-shadow: 0 2px 10px rgba(32,178,170,.4);
+  box-shadow: 0 2px 10px rgba(0,137,123,.4);
 }
 .sidebar-brand-text strong {
   display: block; font-size: .9rem; font-weight: 800;
@@ -467,7 +467,7 @@ footer ul li a:hover { color: #fff; }
 }
 .sidebar-nav-link.active {
   color: #fff;
-  background: rgba(32,178,170,.14);
+  background: rgba(0,137,123,.14);
   box-shadow: inset 3px 0 0 var(--teal);
   font-weight: 600;
 }
@@ -612,7 +612,7 @@ footer ul li a:hover { color: #fff; }
   width: 40px; height: 40px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
 }
-.sc-teal  .stat-icon-box { background: rgba(32,178,170,.12); }
+.sc-teal  .stat-icon-box { background: rgba(0,137,123,.12); }
 .sc-navy  .stat-icon-box { background: rgba(59,130,246,.1); }
 .sc-amber .stat-icon-box { background: rgba(245,158,11,.1); }
 .sc-lime  .stat-icon-box { background: rgba(34,197,94,.1); }
@@ -661,7 +661,7 @@ tbody tr:hover { background: #fafcff; }
 .badge-red    { background: #fee2e2; color: #b91c1c; }
 .badge-blue   { background: #dbeafe; color: #1d4ed8; }
 .badge-purple { background: #ede9fe; color: #6d28d9; }
-.badge-teal   { background: rgba(32,178,170,.12); color: var(--teal-dark); }
+.badge-teal   { background: rgba(0,137,123,.12); color: var(--teal-dark); }
 
 /* ── Buttons ─────────────────────────────────────── */
 .btn-sm { padding: 6px 14px; border-radius: 7px; font-size: .82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; transition: all .15s; }
@@ -690,7 +690,7 @@ tbody tr:hover { background: #fafcff; }
   display: flex; align-items: center; justify-content: center;
   font-size: .95rem; flex-shrink: 0;
 }
-.qa-teal  .quick-action-icon { background: rgba(32,178,170,.1); }
+.qa-teal  .quick-action-icon { background: rgba(0,137,123,.1); }
 .qa-amber .quick-action-icon { background: rgba(245,158,11,.1); }
 .qa-navy  .quick-action-icon { background: rgba(0,31,63,.07); }
 .qa-lime  .quick-action-icon { background: rgba(34,197,94,.1); }
@@ -724,7 +724,7 @@ tbody tr:hover { background: #fafcff; }
 .admin-form-card textarea:focus,
 .admin-form-card select:focus {
   border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(32,178,170,.1);
+  box-shadow: 0 0 0 3px rgba(0,137,123,.1);
 }
 .admin-form-card textarea { resize: vertical; min-height: 100px; }
 .checkbox-group { display: flex; gap: 24px; flex-wrap: wrap; }
@@ -733,6 +733,69 @@ tbody tr:hover { background: #fafcff; }
 .img-preview { margin-top: 10px; border-radius: 8px; overflow: hidden; max-width: 140px; }
 .img-preview img { width: 100%; }
 .current-img-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+
+/* ── Bundle Product Picker ───────────────────────── */
+.bundle-picker { position: relative; margin-bottom: 12px; }
+.bundle-picker input {
+  width: 100%; padding: 10px 13px;
+  border: 2px solid var(--border); border-radius: 8px;
+  font-size: .9rem; outline: none; transition: border-color .18s;
+}
+.bundle-picker input:focus { border-color: var(--teal); }
+.bundle-picker-results {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: #fff; border: 1px solid var(--border); border-radius: 10px;
+  box-shadow: var(--shadow-lg); max-height: 280px; overflow-y: auto;
+  z-index: 20; display: none;
+}
+.bundle-picker-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; cursor: pointer; transition: background .12s;
+  border-bottom: 1px solid #f0f4f8;
+}
+.bundle-picker-row:last-child { border-bottom: none; }
+.bundle-picker-row:hover { background: var(--admin-bg); }
+.bundle-picker-thumb {
+  width: 34px; height: 34px; border-radius: 7px; flex-shrink: 0;
+  background: var(--teal-dim); display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; overflow: hidden;
+}
+.bundle-picker-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.bundle-picker-info { flex: 1; min-width: 0; }
+.bundle-picker-name { font-size: .85rem; font-weight: 600; color: var(--navy); }
+.bundle-picker-meta { font-size: .75rem; color: var(--muted); }
+.bundle-picker-add { font-size: .78rem; font-weight: 700; color: var(--teal-dark); flex-shrink: 0; }
+
+.bundle-selected-list { display: flex; flex-direction: column; gap: 8px; }
+.bundle-empty-hint {
+  padding: 20px; text-align: center; color: var(--muted); font-size: .85rem;
+  background: #f8fafc; border-radius: 10px; border: 2px dashed var(--border);
+}
+.bundle-selected-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; background: #f8fafc; border-radius: 10px;
+}
+.bundle-selected-subtotal { font-weight: 700; color: var(--teal-dark); font-size: .88rem; min-width: 60px; text-align: right; }
+.bundle-original-price {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 13px; background: #f8fafc; border-radius: 8px;
+  border: 2px solid var(--border); font-weight: 700; font-size: .95rem; min-height: 44px;
+}
+
+/* ── Bundle Deal (storefront) ─────────────────────── */
+.badge-deal {
+  position: absolute; top: 10px; left: 10px;
+  background: linear-gradient(135deg, var(--pink), var(--purple));
+  color: #fff; font-size: .72rem; font-weight: 700;
+  padding: 3px 9px; border-radius: 6px;
+}
+.badge-savings {
+  position: absolute; bottom: 10px; left: 10px;
+  background: #15803d; color: #fff;
+  font-size: .72rem; font-weight: 700;
+  padding: 3px 9px; border-radius: 6px;
+}
+.bundle-deals-section { background: linear-gradient(135deg, #fdf4ff, #fff7ed); padding: 40px 0; }
 
 /* ── Login ───────────────────────────────────────── */
 .login-wrap {
