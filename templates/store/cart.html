@@ -37,13 +37,13 @@ document.addEventListener('DOMContentLoaded', () => {
       <td style="font-weight:700;">৳${item.price}</td>
       <td>
         <div style="display:flex;align-items:center;gap:8px;">
-          <button class="qty-btn" onclick="updateQty(${item.id},-1);location.reload()">−</button>
+          <button class="qty-btn" onclick="updateQty(${item.id},-1,'${item.type || 'product'}');location.reload()">−</button>
           <span style="font-weight:700;min-width:20px;text-align:center;">${item.qty}</span>
-          <button class="qty-btn" onclick="updateQty(${item.id},1);location.reload()">+</button>
+          <button class="qty-btn" onclick="updateQty(${item.id},1,'${item.type || 'product'}');location.reload()">+</button>
         </div>
       </td>
       <td style="font-weight:700;color:var(--teal-dark);">৳${sub.toFixed(0)}</td>
-      <td><button class="btn-sm btn-red" onclick="removeFromCart(${item.id});location.reload()">🗑 Remove</button></td>
+      <td><button class="btn-sm btn-red" onclick="removeFromCart(${item.id},'${item.type || 'product'}');location.reload()">🗑 Remove</button></td>
     </tr>`;
   }).join('');
 

@@ -39,6 +39,43 @@
     </form>
   </div>
 
+  {% if bundles %}
+  <div class="bundle-deals-section" style="margin: 0 0 32px; border-radius:16px; padding:28px 24px;">
+    <div class="section-header">
+      <h2 class="section-title">🎁 <span>Bundle</span> Deals</h2>
+    </div>
+    <div class="product-grid">
+      {% for b in bundles %}
+      <div class="product-card">
+        <div class="product-img-wrap">
+          {% if b.image %}
+            <img src="{{ url_for('static', filename='uploads/' + b.image) }}" alt="{{ b.name }}">
+          {% else %}
+            <div class="product-img-placeholder">🎁</div>
+          {% endif %}
+          {% if b.is_deal %}<span class="badge-deal">🎁 Bundle Deal</span>{% endif %}
+          {% if b.savings > 0 %}<span class="badge-savings">Save ৳{{ b.savings|int }}</span>{% endif %}
+        </div>
+        <div class="product-info">
+          <div class="product-cat">🎁 Bundle · {{ b.items|length }} item{{ 's' if b.items|length != 1 }}</div>
+          <div class="product-name">{{ b.name }}</div>
+          {% if b.description %}<div class="product-desc">{{ b.description }}</div>{% endif %}
+          <div class="product-footer">
+            <div class="price-wrap">
+              <span class="price">{{ b.price|int }}</span>
+              {% if b.original_price > b.price %}<span class="original-price">{{ b.original_price|int }}</span>{% endif %}
+            </div>
+            <button class="add-cart-btn" onclick="addToCart({{ b.id }}, '{{ b.name|replace("'", "\\'") }}', {{ b.price }}, '{{ b.image }}', 'Bundle', 'bundle')">
+              + Add
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
   {% if products %}
   <div class="product-grid">
     {% for p in products %}

@@ -15,28 +15,31 @@ function updateCartUI() {
   renderCartItems();
 }
 
-function addToCart(id, name, price, image, cat) {
-  const existing = cart.find(i => i.id === id);
+function addToCart(id, name, price, image, cat, type) {
+  type = type || 'product';
+  const existing = cart.find(i => i.id === id && (i.type || 'product') === type);
   if (existing) {
     existing.qty++;
   } else {
-    cart.push({ id, name, price, image, cat, qty: 1 });
+    cart.push({ id, name, price, image, cat, type, qty: 1 });
   }
   saveCart();
   showCartToast(name);
   openCart();
 }
 
-function removeFromCart(id) {
-  cart = cart.filter(i => i.id !== id);
+function removeFromCart(id, type) {
+  type = type || 'product';
+  cart = cart.filter(i => !(i.id === id && (i.type || 'product') === type));
   saveCart();
 }
 
-function updateQty(id, delta) {
-  const item = cart.find(i => i.id === id);
+function updateQty(id, delta, type) {
+  type = type || 'product';
+  const item = cart.find(i => i.id === id && (i.type || 'product') === type);
   if (!item) return;
   item.qty += delta;
-  if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+  if (item.qty <= 0) cart = cart.filter(i => !(i.id === id && (i.type || 'product') === type));
   saveCart();
 }
 
@@ -57,12 +60,12 @@ function renderCartItems() {
         <div class="cart-item-name">${item.name}</div>
         <div class="cart-item-price">${item.price}</div>
         <div class="qty-ctrl">
-          <button class="qty-btn" onclick="updateQty(${item.id}, -1)">−</button>
+          <button class="qty-btn" onclick="updateQty(${item.id}, -1, '${item.type || 'product'}')">−</button>
           <span class="qty-num">${item.qty}</span>
-          <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
+          <button class="qty-btn" onclick="updateQty(${item.id}, 1, '${item.type || 'product'}')">+</button>
         </div>
       </div>
-      <button class="remove-item" onclick="removeFromCart(${item.id})" title="Remove">🗑</button>
+      <button class="remove-item" onclick="removeFromCart(${item.id}, '${item.type || 'product'}')" title="Remove">🗑</button>
     </div>
   `).join('');
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
@@ -71,7 +74,7 @@ function renderCartItems() {
 
 function getCatIcon(cat) {
   const icons = { 'Soaps': '🧼', 'Face Care': '✨', 'Creams & Lotions': '🧴',
-    'Hair Care': '💆', 'Body Care': '🛁', 'Essential Oils': '🌸', 'Gift Sets': '🎁' };
+    'Hair Care': '💆', 'Body Care': '🛁', 'Essential Oils': '🌸', 'Gift Sets': '🎁', 'Bundle': '🎁' };
   return icons[cat] || '🌿';
 }
 

@@ -1,0 +1,234 @@
+{% extends 'admin/base.html' %}
+{% block title %}{{ 'Edit' if bundle else 'Add' }} Bundle – Admin{% endblock %}
+{% block page_title %}{{ '✏️ Edit Bundle' if bundle else '➕ Create New Bundle' }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:16px;">
+  <a href="{{ url_for('admin_bundles') }}" style="color:var(--teal); font-size:.9rem;">← Back to Bundles</a>
+</div>
+
+<div class="admin-form-card" style="max-width:820px;">
+  <form method="POST" enctype="multipart/form-data" id="bundleForm">
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Bundle Name *</label>
+        <input type="text" name="name" value="{{ bundle.name if bundle else '' }}" required
+               placeholder="e.g. Skincare Starter Bundle">
+      </div>
+
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Bundle Description</label>
+        <textarea name="description" rows="3" placeholder="Describe what's included and why it's a great deal…">{{ bundle.description if bundle else '' }}</textarea>
+      </div>
+
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Add Products *</label>
+        <div class="bundle-picker">
+          <input type="text" id="productSearchInput" placeholder="🔍 Search products to add…" autocomplete="off">
+          <div id="productSearchResults" class="bundle-picker-results"></div>
+        </div>
+
+        <div id="selectedProductsList" class="bundle-selected-list">
+          <div class="bundle-empty-hint">No products selected yet — search above to add some.</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Bundle Price (BDT) *</label>
+        <input type="number" id="bundlePriceInput" name="price" value="{{ bundle.price if bundle else '' }}" required min="0" step="0.01"
+               placeholder="e.g. 850">
+      </div>
+
+      <div class="form-group">
+        <label>Original Price (auto-calculated)</label>
+        <div class="bundle-original-price">
+          <span id="originalPriceDisplay">৳0</span>
+          <span id="savingsBadge" class="badge badge-green" style="display:none;"></span>
+        </div>
+      </div>
+
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Bundle Image</label>
+        {% if bundle and bundle.image %}
+        <div class="current-img-wrap">
+          <img src="{{ url_for('static', filename='uploads/' + bundle.image) }}" style="width:80px; height:80px; border-radius:8px; object-fit:cover;">
+          <span style="font-size:.85rem; color:var(--muted);">Current image — upload a new one to replace</span>
+        </div>
+        {% endif %}
+        <input type="file" name="image" accept="image/*" id="imgInput"
+               style="padding:10px; background:#f8fafc; border:2px dashed var(--border); border-radius:8px;">
+        <div class="img-preview" id="imgPreview" style="display:none;">
+          <img id="previewImg" src="" alt="Preview">
+        </div>
+      </div>
+
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Options</label>
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" name="in_stock" value="1" {% if not bundle or bundle.in_stock %}checked{% endif %}>
+            In Stock
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="featured" value="1" {% if bundle and bundle.featured %}checked{% endif %}>
+            Featured on Homepage
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="is_deal" value="1" {% if not bundle or bundle.is_deal %}checked{% endif %}>
+            🎁 Featured as Bundle Deal
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <input type="hidden" name="items_json" id="itemsJsonInput">
+
+    <div style="display:flex; gap:12px; margin-top:8px;">
+      <button type="submit" class="btn btn-teal">
+        {{ '💾 Save Changes' if bundle else '➕ Create Bundle' }}
+      </button>
+      <a href="{{ url_for('admin_bundles') }}" class="btn" style="background:#e2e8f0; color:var(--navy);">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+const ALL_PRODUCTS = {{ products|tojson }};
+let selectedItems = {{ selected_items|tojson }};
+
+const productsById = {};
+ALL_PRODUCTS.forEach(p => { productsById[p.id] = p; });
+
+function productThumb(p) {
+  return p.image
+    ? `<img src="/static/uploads/${p.image}" alt="${p.name}">`
+    : '🌿';
+}
+
+function renderSearchResults(term) {
+  const box = document.getElementById('productSearchResults');
+  if (!term) { box.innerHTML = ''; box.style.display = 'none'; return; }
+  const selectedIds = new Set(selectedItems.map(i => i.product_id));
+  const matches = ALL_PRODUCTS.filter(p =>
+    !selectedIds.has(p.id) && p.name.toLowerCase().includes(term.toLowerCase())
+  ).slice(0, 8);
+  if (matches.length === 0) {
+    box.innerHTML = `<div class="bundle-picker-row" style="color:var(--muted);">No matching products</div>`;
+  } else {
+    box.innerHTML = matches.map(p => `
+      <div class="bundle-picker-row" onclick="addBundleProduct(${p.id})">
+        <div class="bundle-picker-thumb">${productThumb(p)}</div>
+        <div class="bundle-picker-info">
+          <div class="bundle-picker-name">${p.name}</div>
+          <div class="bundle-picker-meta">${p.category} · ৳${p.price}</div>
+        </div>
+        <span class="bundle-picker-add">+ Add</span>
+      </div>
+    `).join('');
+  }
+  box.style.display = 'block';
+}
+
+function addBundleProduct(id) {
+  if (!selectedItems.find(i => i.product_id === id)) {
+    selectedItems.push({ product_id: id, qty: 1 });
+  }
+  document.getElementById('productSearchInput').value = '';
+  renderSearchResults('');
+  renderSelectedList();
+}
+
+function removeBundleProduct(id) {
+  selectedItems = selectedItems.filter(i => i.product_id !== id);
+  renderSelectedList();
+}
+
+function changeBundleQty(id, delta) {
+  const item = selectedItems.find(i => i.product_id === id);
+  if (!item) return;
+  item.qty = Math.max(1, item.qty + delta);
+  renderSelectedList();
+}
+
+function renderSelectedList() {
+  const wrap = document.getElementById('selectedProductsList');
+  selectedItems = selectedItems.filter(i => productsById[i.product_id]);
+  if (selectedItems.length === 0) {
+    wrap.innerHTML = `<div class="bundle-empty-hint">No products selected yet — search above to add some.</div>`;
+  } else {
+    wrap.innerHTML = selectedItems.map(i => {
+      const p = productsById[i.product_id];
+      return `
+        <div class="bundle-selected-item">
+          <div class="bundle-picker-thumb">${productThumb(p)}</div>
+          <div class="bundle-picker-info">
+            <div class="bundle-picker-name">${p.name}</div>
+            <div class="bundle-picker-meta">৳${p.price} each</div>
+          </div>
+          <div class="qty-ctrl">
+            <button type="button" class="qty-btn" onclick="changeBundleQty(${p.id}, -1)">−</button>
+            <span class="qty-num">${i.qty}</span>
+            <button type="button" class="qty-btn" onclick="changeBundleQty(${p.id}, 1)">+</button>
+          </div>
+          <div class="bundle-selected-subtotal">৳${(p.price * i.qty).toFixed(0)}</div>
+          <button type="button" class="remove-item" onclick="removeBundleProduct(${p.id})" title="Remove">🗑</button>
+        </div>
+      `;
+    }).join('');
+  }
+  updateCalculatedPrices();
+}
+
+function updateCalculatedPrices() {
+  const original = selectedItems.reduce((sum, i) => {
+    const p = productsById[i.product_id];
+    return sum + (p ? p.price * i.qty : 0);
+  }, 0);
+  document.getElementById('originalPriceDisplay').textContent = `৳${original.toFixed(0)}`;
+  document.getElementById('originalPriceDisplay').style.textDecoration = original > 0 ? 'line-through' : 'none';
+  document.getElementById('originalPriceDisplay').style.color = 'var(--muted)';
+
+  const bundlePrice = parseFloat(document.getElementById('bundlePriceInput').value) || 0;
+  const savings = original - bundlePrice;
+  const badge = document.getElementById('savingsBadge');
+  if (savings > 0 && original > 0) {
+    badge.style.display = 'inline-block';
+    badge.textContent = `Save ৳${savings.toFixed(0)}`;
+  } else {
+    badge.style.display = 'none';
+  }
+  document.getElementById('itemsJsonInput').value = JSON.stringify(selectedItems);
+}
+
+document.getElementById('productSearchInput').addEventListener('input', e => renderSearchResults(e.target.value.trim()));
+document.getElementById('bundlePriceInput').addEventListener('input', updateCalculatedPrices);
+document.addEventListener('click', e => {
+  if (!e.target.closest('.bundle-picker')) {
+    document.getElementById('productSearchResults').style.display = 'none';
+  }
+});
+
+document.getElementById('bundleForm').addEventListener('submit', e => {
+  if (selectedItems.length === 0) {
+    e.preventDefault();
+    alert('Please add at least one product to the bundle.');
+  }
+  document.getElementById('itemsJsonInput').value = JSON.stringify(selectedItems);
+});
+
+renderSelectedList();
+
+document.getElementById('imgInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      document.getElementById('previewImg').src = ev.target.result;
+      document.getElementById('imgPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+});
+</script>
+{% endblock %}

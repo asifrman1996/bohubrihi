@@ -1,0 +1,87 @@
+{% extends 'admin/base.html' %}
+{% block title %}Bundles – Admin{% endblock %}
+{% block page_title %}Bundles{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+  <p style="color:var(--muted); font-size:.85rem;">Combine existing products into discounted bundle deals.</p>
+  <a href="{{ url_for('admin_add_bundle') }}" class="btn-sm btn-teal" style="white-space:nowrap;">➕ Create New Bundle</a>
+</div>
+
+<div class="admin-table-wrap">
+  <div class="admin-table-header">
+    <h3>{{ bundles|length }} Bundle{% if bundles|length != 1 %}s{% endif %}</h3>
+  </div>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:60px;">Image</th>
+          <th>Name</th>
+          <th>Included Products</th>
+          <th>Bundle Price</th>
+          <th>Savings</th>
+          <th>Status</th>
+          <th style="width:160px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bundles %}
+        <tr>
+          <td>
+            <div class="td-img">
+              {% if b.image %}
+                <img src="{{ url_for('static', filename='uploads/' + b.image) }}" alt="{{ b.name }}">
+              {% else %}
+                🎁
+              {% endif %}
+            </div>
+          </td>
+          <td>
+            <div style="font-weight:700; color:var(--navy);">{{ b.name }}</div>
+            {% if b.is_deal %}<span class="badge badge-purple" style="margin-top:4px;">🎁 Bundle Deal</span>{% endif %}
+            {% if b.featured %}<span class="badge badge-teal" style="margin-top:4px;">★ Homepage</span>{% endif %}
+          </td>
+          <td style="max-width:280px;">
+            <div style="display:flex; flex-wrap:wrap; gap:4px;">
+              {% for bi in b.items %}
+              <span class="badge badge-teal" style="font-weight:600;">{{ bi.quantity }}× {{ bi.product.name }}</span>
+              {% else %}
+              <span style="color:var(--muted); font-size:.82rem;">No products</span>
+              {% endfor %}
+            </div>
+          </td>
+          <td>
+            <span style="font-weight:700; color:var(--teal-dark);">৳{{ b.price|int }}</span>
+            <div style="font-size:.75rem; color:var(--muted); text-decoration:line-through;">৳{{ b.original_price|int }}</div>
+          </td>
+          <td><span class="badge badge-green">Save ৳{{ b.savings|int }}</span></td>
+          <td>
+            {% if b.in_stock %}
+              <span class="badge badge-green">In Stock</span>
+            {% else %}
+              <span class="badge badge-red">Out of Stock</span>
+            {% endif %}
+          </td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <a href="{{ url_for('admin_edit_bundle', bid=b.id) }}" class="btn-sm btn-navy">✏️ Edit</a>
+              <form method="POST" action="{{ url_for('admin_delete_bundle', bid=b.id) }}"
+                    onsubmit="return confirm('Delete bundle {{ b.name }}? This cannot be undone.')">
+                <button type="submit" class="btn-sm btn-red">🗑</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" style="text-align:center; color:var(--muted); padding:48px;">
+            No bundles yet. <a href="{{ url_for('admin_add_bundle') }}" style="color:var(--teal);">Create your first bundle →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

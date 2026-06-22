@@ -62,6 +62,32 @@ class Review(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+class Bundle(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, default='')
+    price = db.Column(db.Float, nullable=False)
+    original_price = db.Column(db.Float, nullable=False, default=0)
+    image = db.Column(db.String(300), default='')
+    in_stock = db.Column(db.Boolean, default=True)
+    featured = db.Column(db.Boolean, default=False)
+    is_deal = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    items = db.relationship('BundleItem', backref='bundle', lazy=True, cascade='all, delete-orphan')
+
+    @property
+    def savings(self):
+        return max(self.original_price - self.price, 0)
+
+
+class BundleItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    bundle_id = db.Column(db.Integer, db.ForeignKey('bundle.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False, default=1)
+    product = db.relationship('Product')
+
+
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     customer_name = db.Column(db.String(200), nullable=False)
@@ -95,8 +121,12 @@ def notify_slack_order(order, items):
         total_qty = sum(i['qty'] for i in items)
         lines = []
         for idx, item in enumerate(items, 1):
-            p = Product.query.get(item['id'])
-            weight = f" {p.weight}" if p and p.weight else ""
+            weight = ""
+            if item.get('type') != 'bundle':
+                p = Product.query.get(item['id'])
+                weight = f" {p.weight}" if p and p.weight else ""
+            else:
+                weight = " (Bundle)"
             lines.append(f"{idx}.{item['name']}{weight} - {item['qty']} pcs")
         text = (
             f"#{order.id}\n\n"
@@ -171,7 +201,9 @@ def seed_data():
 def index():
     categories = Category.query.order_by(Category.sort_order).all()
     featured = Product.query.filter_by(featured=True, in_stock=True).limit(8).all()
-    return render_template('store/index.html', categories=categories, featured=featured)
+    featured_bundles = Bundle.query.filter_by(featured=True, in_stock=True).all()
+    return render_template('store/index.html', categories=categories, featured=featured,
+                           featured_bundles=featured_bundles)
 
 
 @app.route('/shop')
@@ -188,8 +220,10 @@ def shop():
     if search:
         query = query.filter(Product.name.ilike(f'%{search}%'))
     products = query.order_by(Product.created_at.desc()).all()
+    bundles = Bundle.query.filter_by(in_stock=True).order_by(Bundle.created_at.desc()).all() \
+        if not active_cat and not search else []
     return render_template('store/shop.html', products=products, categories=categories,
-                           active_cat=active_cat, search=search)
+                           active_cat=active_cat, search=search, bundles=bundles)
 
 
 @app.route('/product/<int:pid>')
@@ -524,6 +558,134 @@ def admin_delete_category(cid):
         db.session.commit()
         flash(f'Category "{cat.name}" deleted.', 'success')
     return redirect(url_for('admin_categories'))
+
+
+@app.route('/admin/bundles')
+@admin_required
+def admin_bundles():
+    bundles = Bundle.query.order_by(Bundle.created_at.desc()).all()
+    return render_template('admin/bundles.html', bundles=bundles)
+
+
+def _products_data():
+    products = Product.query.order_by(Product.name).all()
+    return [{
+        'id': p.id, 'name': p.name, 'price': p.price,
+        'image': p.image, 'category': p.category.name, 'weight': p.weight,
+    } for p in products]
+
+
+def _parse_bundle_items(raw_json):
+    try:
+        raw_items = json.loads(raw_json or '[]')
+    except (TypeError, ValueError):
+        raw_items = []
+    items = []
+    for entry in raw_items:
+        try:
+            pid = int(entry['product_id'])
+            qty = max(1, int(entry['qty']))
+        except (KeyError, TypeError, ValueError):
+            continue
+        product = Product.query.get(pid)
+        if product:
+            items.append((product, qty))
+    return items
+
+
+@app.route('/admin/bundles/add', methods=['GET', 'POST'])
+@admin_required
+def admin_add_bundle():
+    if request.method == 'POST':
+        items = _parse_bundle_items(request.form.get('items_json'))
+        if not items:
+            flash('Select at least one product for the bundle.', 'error')
+            return render_template('admin/bundle_form.html', bundle=None,
+                                   products=_products_data(), selected_items=[])
+        image_filename = ''
+        if 'image' in request.files:
+            f = request.files['image']
+            if f and f.filename and allowed_file(f.filename):
+                image_filename = secure_filename(f.filename)
+                base, ext = os.path.splitext(image_filename)
+                image_filename = f"{base}_{int(datetime.utcnow().timestamp())}{ext}"
+                f.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
+        original_price = sum(p.price * qty for p, qty in items)
+        bundle = Bundle(
+            name=request.form['name'],
+            description=request.form.get('description', ''),
+            price=float(request.form['price']),
+            original_price=original_price,
+            image=image_filename,
+            in_stock=bool(request.form.get('in_stock')),
+            featured=bool(request.form.get('featured')),
+            is_deal=bool(request.form.get('is_deal')),
+        )
+        db.session.add(bundle)
+        db.session.flush()
+        for product, qty in items:
+            db.session.add(BundleItem(bundle_id=bundle.id, product_id=product.id, quantity=qty))
+        db.session.commit()
+        flash(f'Bundle "{bundle.name}" created successfully!', 'success')
+        return redirect(url_for('admin_bundles'))
+    return render_template('admin/bundle_form.html', bundle=None,
+                           products=_products_data(), selected_items=[])
+
+
+@app.route('/admin/bundles/edit/<int:bid>', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_bundle(bid):
+    bundle = Bundle.query.get_or_404(bid)
+    if request.method == 'POST':
+        items = _parse_bundle_items(request.form.get('items_json'))
+        if not items:
+            flash('Select at least one product for the bundle.', 'error')
+            selected_items = [{'product_id': bi.product_id, 'qty': bi.quantity} for bi in bundle.items]
+            return render_template('admin/bundle_form.html', bundle=bundle,
+                                   products=_products_data(), selected_items=selected_items)
+        if 'image' in request.files:
+            f = request.files['image']
+            if f and f.filename and allowed_file(f.filename):
+                if bundle.image:
+                    old_path = os.path.join(app.config['UPLOAD_FOLDER'], bundle.image)
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+                image_filename = secure_filename(f.filename)
+                base, ext = os.path.splitext(image_filename)
+                image_filename = f"{base}_{int(datetime.utcnow().timestamp())}{ext}"
+                f.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
+                bundle.image = image_filename
+        bundle.name = request.form['name']
+        bundle.description = request.form.get('description', '')
+        bundle.price = float(request.form['price'])
+        bundle.original_price = sum(p.price * qty for p, qty in items)
+        bundle.in_stock = bool(request.form.get('in_stock'))
+        bundle.featured = bool(request.form.get('featured'))
+        bundle.is_deal = bool(request.form.get('is_deal'))
+        BundleItem.query.filter_by(bundle_id=bundle.id).delete()
+        for product, qty in items:
+            db.session.add(BundleItem(bundle_id=bundle.id, product_id=product.id, quantity=qty))
+        db.session.commit()
+        flash(f'Bundle "{bundle.name}" updated successfully!', 'success')
+        return redirect(url_for('admin_bundles'))
+    selected_items = [{'product_id': bi.product_id, 'qty': bi.quantity} for bi in bundle.items]
+    return render_template('admin/bundle_form.html', bundle=bundle,
+                           products=_products_data(), selected_items=selected_items)
+
+
+@app.route('/admin/bundles/delete/<int:bid>', methods=['POST'])
+@admin_required
+def admin_delete_bundle(bid):
+    bundle = Bundle.query.get_or_404(bid)
+    if bundle.image:
+        img_path = os.path.join(app.config['UPLOAD_FOLDER'], bundle.image)
+        if os.path.exists(img_path):
+            os.remove(img_path)
+    name = bundle.name
+    db.session.delete(bundle)
+    db.session.commit()
+    flash(f'Bundle "{name}" deleted.', 'success')
+    return redirect(url_for('admin_bundles'))
 
 
 @app.route('/admin/settings', methods=['GET', 'POST'])
