@@ -309,7 +309,7 @@ nav a:hover, nav a.active { color: #fff; }
 .qty-btn:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
 .qty-num { font-weight: 700; min-width: 20px; text-align: center; }
 .remove-item { color: var(--red); background: none; font-size: 1.1rem; margin-left: auto; }
-.cart-footer { padding: 20px; border-top: 2px solid var(--border); background: #FDF6F0; }
+.cart-footer { padding: 20px; padding-bottom: env(safe-area-inset-bottom, 80px); border-top: 2px solid var(--border); background: #FDF6F0; }
 .cart-total { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 1.1rem; font-weight: 700; }
 .cart-total .amount { color: var(--navy); font-size: 1.3rem; }
 .cart-total .amount::before { content: '৳'; }
