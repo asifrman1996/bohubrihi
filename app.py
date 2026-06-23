@@ -162,20 +162,45 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
-SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '')
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '').strip()
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '').strip()
 SUPABASE_BUCKET = 'product-images'
+
+
+def _log(msg):
+    print(f"[SupabaseStorage] {msg}", file=sys.stderr, flush=True)
+
 
 supabase_client = None
 if SUPABASE_URL and SUPABASE_KEY:
+    _log(f"SUPABASE_URL set ({SUPABASE_URL[:30]}...), SUPABASE_KEY set (len={len(SUPABASE_KEY)})")
     try:
         from supabase import create_client
         supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
-        print("Image storage: Supabase Storage (product-images)", file=sys.stderr)
+        _log(f"Client created OK. Target bucket: '{SUPABASE_BUCKET}'")
+        try:
+            buckets = supabase_client.storage.list_buckets()
+            bucket_names = [b.name for b in buckets]
+            _log(f"Buckets visible to this key: {bucket_names}")
+            if SUPABASE_BUCKET not in bucket_names:
+                _log(f"WARNING: bucket '{SUPABASE_BUCKET}' not found in the list above. "
+                     f"Check it exists in Supabase and the name matches exactly (case-sensitive).")
+        except Exception as e:
+            _log(f"WARNING: could not list buckets to verify '{SUPABASE_BUCKET}' exists "
+                 f"({type(e).__name__}: {e}). Uploads will still be attempted.")
     except Exception as e:
-        print(f"Supabase Storage: failed to init client, falling back to local uploads: {e}", file=sys.stderr)
+        import traceback
+        _log(f"ERROR: failed to create client, falling back to local uploads. "
+             f"{type(e).__name__}: {e}")
+        traceback.print_exc(file=sys.stderr)
+        supabase_client = None
 else:
-    print("Image storage: local static/uploads/", file=sys.stderr)
+    missing = []
+    if not SUPABASE_URL:
+        missing.append('SUPABASE_URL')
+    if not SUPABASE_KEY:
+        missing.append('SUPABASE_KEY')
+    _log(f"Not configured (missing env var(s): {', '.join(missing)}). Using local static/uploads/.")
 
 
 def _unique_filename(original_filename):
@@ -195,13 +220,22 @@ def save_uploaded_image(file_storage):
         try:
             file_bytes = file_storage.read()
             content_type = file_storage.mimetype or 'application/octet-stream'
+            _log(f"Uploading '{filename}' ({len(file_bytes)} bytes, {content_type}) "
+                 f"to bucket '{SUPABASE_BUCKET}'...")
             supabase_client.storage.from_(SUPABASE_BUCKET).upload(
                 filename, file_bytes, {'content-type': content_type}
             )
-            return supabase_client.storage.from_(SUPABASE_BUCKET).get_public_url(filename)
+            url = supabase_client.storage.from_(SUPABASE_BUCKET).get_public_url(filename)
+            _log(f"Upload OK: {url}")
+            return url
         except Exception as e:
-            print(f"Supabase Storage upload failed, image not saved: {e}", file=sys.stderr)
-            return ''
+            import traceback
+            _log(f"ERROR: upload failed for '{filename}' in bucket '{SUPABASE_BUCKET}', "
+                 f"falling back to local disk. {type(e).__name__}: {e}")
+            traceback.print_exc(file=sys.stderr)
+            # Fall through to local save so the admin doesn't lose the image entirely.
+    else:
+        _log(f"No client configured, saving '{filename}' locally instead.")
 
     file_storage.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     return filename
@@ -213,14 +247,20 @@ def delete_uploaded_image(image_value):
         return
     if image_value.startswith('http://') or image_value.startswith('https://'):
         if not supabase_client:
+            _log(f"Can't delete remote image '{image_value}': no client configured.")
             return
         try:
             marker = f'/object/public/{SUPABASE_BUCKET}/'
             if marker in image_value:
                 path = image_value.split(marker, 1)[1]
                 supabase_client.storage.from_(SUPABASE_BUCKET).remove([path])
+                _log(f"Deleted '{path}' from bucket '{SUPABASE_BUCKET}'.")
+            else:
+                _log(f"WARNING: '{image_value}' doesn't match expected bucket path, skipping delete.")
         except Exception as e:
-            print(f"Supabase Storage delete failed: {e}", file=sys.stderr)
+            import traceback
+            _log(f"ERROR: delete failed for '{image_value}'. {type(e).__name__}: {e}")
+            traceback.print_exc(file=sys.stderr)
     else:
         local_path = os.path.join(app.config['UPLOAD_FOLDER'], image_value)
         if os.path.exists(local_path):
