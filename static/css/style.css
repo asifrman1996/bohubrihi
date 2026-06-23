@@ -1,24 +1,24 @@
 /* ── Bohubrihi Brand Palette ─────────────────────────────────── */
 :root {
-  --teal:      #00897B;
-  --teal-dark: #00695C;
-  --teal-dim:  rgba(0,137,123,.12);
-  --navy:      #001F3F;
-  --navy-mid:  #0a3460;
-  --lime:      #ADFF2F;
-  --lime-dark: #8fd400;
+  --teal:      #C2385A;
+  --teal-dark: #9E2847;
+  --teal-dim:  rgba(194,56,90,.10);
+  --navy:      #3C0D1E;
+  --navy-mid:  #5A1830;
+  --lime:      #C9A840;
+  --lime-dark: #A88A2E;
   --amber:     #f59e0b;
   --red:       #ef4444;
   --purple:    #7c3aed;
   --pink:      #ec4899;
-  --bg:        #f0f4f8;
+  --bg:        #FDF6F0;
   --card:      #ffffff;
-  --border:    #dde3ec;
-  --text:      #0f1f2e;
-  --muted:     #5a6d82;
+  --border:    #EDD5DC;
+  --text:      #2D1018;
+  --muted:     #8B6472;
   --radius:    12px;
-  --shadow:    0 1px 6px rgba(0,31,63,.07), 0 4px 16px rgba(0,31,63,.05);
-  --shadow-lg: 0 8px 32px rgba(0,31,63,.13);
+  --shadow:    0 1px 6px rgba(60,13,30,.07), 0 4px 16px rgba(60,13,30,.05);
+  --shadow-lg: 0 8px 32px rgba(60,13,30,.13);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -66,13 +66,13 @@ header {
   display: block;
   font-size: .6rem;
   font-weight: 400;
-  color: #94a3b8;
+  color: #E8C4CC;
   letter-spacing: 2px;
   text-transform: uppercase;
 }
 nav { display: flex; gap: 24px; align-items: center; }
 nav a {
-  color: #cbd5e1;
+  color: #E8C4CC;
   font-size: .95rem;
   transition: color .2s;
 }
@@ -105,7 +105,7 @@ nav a:hover, nav a.active { color: #fff; }
 
 /* ── Hero ────────────────────────────────────────────────────── */
 .hero {
-  background: linear-gradient(135deg, var(--navy) 0%, #2d4f7c 50%, var(--teal-dark) 100%);
+  background: linear-gradient(135deg, #3C0D1E 0%, #5A1830 50%, #7A2545 100%);
   color: #fff;
   padding: 80px 20px;
   text-align: center;
@@ -116,12 +116,12 @@ nav a:hover, nav a.active { color: #fff; }
   content: '';
   position: absolute;
   inset: 0;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C2385A' fill-opacity='0.07'%3E%3Cpath d='M30 15 C30 15 35 22 30 30 C25 22 30 15 30 15Z M45 30 C45 30 38 35 30 30 C38 25 45 30 45 30Z M30 45 C30 45 25 38 30 30 C35 38 30 45 30 45Z M15 30 C15 30 22 25 30 30 C22 35 15 30 15 30Z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
 .hero-content { position: relative; z-index: 1; max-width: 700px; margin: 0 auto; }
 .hero h1 { font-size: 3rem; font-weight: 900; line-height: 1.2; margin-bottom: 16px; }
 .hero h1 span { color: var(--lime); }
-.hero p { font-size: 1.2rem; color: #94a3b8; margin-bottom: 32px; }
+.hero p { font-size: 1.2rem; color: #EBC4CC; margin-bottom: 32px; }
 .hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; border-radius: 10px; font-weight: 600; font-size: 1rem; transition: all .2s; }
 .btn-primary { background: var(--teal); color: #fff; }
@@ -159,7 +159,7 @@ nav a:hover, nav a.active { color: #fff; }
 }
 .cat-chip:hover, .cat-chip.active {
   border-color: var(--teal);
-  background: #f0fdfa;
+  background: var(--teal-dim);
   color: var(--teal);
   transform: translateY(-2px);
 }
@@ -197,7 +197,7 @@ nav a:hover, nav a.active { color: #fff; }
 .product-img-wrap {
   position: relative;
   aspect-ratio: 1;
-  background: linear-gradient(135deg, #f0fdfa, #f8fafc);
+  background: linear-gradient(135deg, #FDF0F3, #F8F2F4);
   overflow: hidden;
 }
 .product-img-wrap img {
@@ -214,7 +214,7 @@ nav a:hover, nav a.active { color: #fff; }
   align-items: center;
   justify-content: center;
   font-size: 4rem;
-  background: linear-gradient(135deg, #f0fdfa, #e0f2fe);
+  background: linear-gradient(135deg, #FDF0F3, #FAE8EC);
 }
 .badge-sale {
   position: absolute;
@@ -286,7 +286,7 @@ nav a:hover, nav a.active { color: #fff; }
 .cart-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .cart-item-img {
   width: 60px; height: 60px; border-radius: 8px;
-  object-fit: cover; background: #f0fdfa;
+  object-fit: cover; background: #FDF0F3;
   display: flex; align-items: center; justify-content: center;
   font-size: 1.5rem; flex-shrink: 0;
 }
@@ -304,7 +304,7 @@ nav a:hover, nav a.active { color: #fff; }
 .qty-btn:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
 .qty-num { font-weight: 700; min-width: 20px; text-align: center; }
 .remove-item { color: var(--red); background: none; font-size: 1.1rem; margin-left: auto; }
-.cart-footer { padding: 20px; border-top: 2px solid var(--border); background: #f8fafc; }
+.cart-footer { padding: 20px; border-top: 2px solid var(--border); background: #FDF6F0; }
 .cart-total { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 1.1rem; font-weight: 700; }
 .cart-total .amount { color: var(--teal-dark); font-size: 1.3rem; }
 .cart-total .amount::before { content: '৳'; }
@@ -318,7 +318,7 @@ nav a:hover, nav a.active { color: #fff; }
 .product-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
 .product-detail-img {
   border-radius: 16px; overflow: hidden; aspect-ratio: 1;
-  background: linear-gradient(135deg, #f0fdfa, #e0f2fe);
+  background: linear-gradient(135deg, #FDF0F3, #FAE8EC);
   display: flex; align-items: center; justify-content: center; font-size: 8rem;
 }
 .product-detail-img img { width: 100%; height: 100%; object-fit: cover; }
@@ -333,7 +333,7 @@ nav a:hover, nav a.active { color: #fff; }
 .detail-meta p { display: flex; gap: 8px; margin-bottom: 8px; font-size: .9rem; }
 .detail-meta strong { color: var(--navy); min-width: 90px; }
 .qty-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
-.qty-large { display: flex; align-items: center; gap: 12px; background: #f0fdfa; padding: 8px 16px; border-radius: 10px; }
+.qty-large { display: flex; align-items: center; gap: 12px; background: #FDF0F3; padding: 8px 16px; border-radius: 10px; }
 .qty-large .qty-btn { width: 32px; height: 32px; font-size: 1.2rem; }
 .qty-large .qty-num { font-size: 1.2rem; font-weight: 700; min-width: 30px; }
 .btn-add-large {
@@ -374,16 +374,16 @@ nav a:hover, nav a.active { color: #fff; }
 .order-id { font-weight: 800; color: var(--teal); font-size: 1.2rem; }
 
 /* ── Footer ──────────────────────────────────────────────────── */
-footer { background: var(--navy); color: #94a3b8; padding: 48px 0 24px; margin-top: 80px; }
+footer { background: var(--navy); color: #E8C4CC; padding: 48px 0 24px; margin-top: 80px; }
 .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
 .footer-brand .logo { margin-bottom: 12px; }
 .footer-brand p { font-size: .9rem; line-height: 1.7; }
 footer h4 { color: #fff; font-size: .95rem; margin-bottom: 16px; }
 footer ul { list-style: none; }
 footer ul li { margin-bottom: 8px; }
-footer ul li a { color: #94a3b8; font-size: .9rem; transition: color .2s; }
+footer ul li a { color: #E8C4CC; font-size: .9rem; transition: color .2s; }
 footer ul li a:hover { color: #fff; }
-.footer-bottom { border-top: 1px solid #2d4f7c; padding-top: 20px; text-align: center; font-size: .85rem; }
+.footer-bottom { border-top: 1px solid #5A1830; padding-top: 20px; text-align: center; font-size: .85rem; }
 
 /* ── Shared Table Styles (also used by admin.css) ─────────────── */
 .admin-table-wrap { background: #fff; border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: 24px; }
@@ -400,9 +400,9 @@ thead th {
   text-transform: uppercase; letter-spacing: .6px;
   background: #f8fafc; border-bottom: 1px solid var(--border); white-space: nowrap;
 }
-tbody td { padding: 12px 16px; border-bottom: 1px solid #f0f4f8; font-size: .875rem; }
+tbody td { padding: 12px 16px; border-bottom: 1px solid #F5EEF0; font-size: .875rem; }
 tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover { background: #fafcff; }
+tbody tr:hover { background: #FFF7F9; }
 .td-img {
   width: 40px; height: 40px; border-radius: 8px;
   background: var(--teal-dim);
@@ -417,7 +417,7 @@ tbody tr:hover { background: #fafcff; }
 .badge-red    { background: #fee2e2; color: #b91c1c; }
 .badge-blue   { background: #dbeafe; color: #1d4ed8; }
 .badge-purple { background: #ede9fe; color: #6d28d9; }
-.badge-teal   { background: rgba(0,137,123,.12); color: var(--teal-dark); }
+.badge-teal   { background: var(--teal-dim); color: var(--teal-dark); }
 
 /* ── Shared Small Buttons (also used by admin.css) ─────────────── */
 .btn-sm { padding: 6px 14px; border-radius: 7px; font-size: .82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; transition: all .15s; }
@@ -427,15 +427,15 @@ tbody tr:hover { background: #fafcff; }
 .btn-red:hover   { background: #dc2626; }
 .btn-navy  { background: var(--navy);  color: #fff; }
 .btn-navy:hover  { background: var(--navy-mid); }
-.btn-lime  { background: var(--lime);  color: var(--navy); }
+.btn-lime  { background: var(--lime);  color: #fff; }
 .btn-lime:hover  { background: var(--lime-dark); }
 .btn-ghost { background: #fff; color: var(--navy); border: 1px solid var(--border); }
-.btn-ghost:hover { background: #f5f7fa; }
+.btn-ghost:hover { background: #FDF6F0; }
 
 /* ── Bundle Deal (storefront) ─────────────────────── */
 .badge-deal {
   position: absolute; top: 10px; left: 10px;
-  background: linear-gradient(135deg, var(--pink), var(--purple));
+  background: linear-gradient(135deg, var(--teal), var(--navy));
   color: #fff; font-size: .72rem; font-weight: 700;
   padding: 3px 9px; border-radius: 6px;
 }
@@ -445,7 +445,7 @@ tbody tr:hover { background: #fafcff; }
   font-size: .72rem; font-weight: 700;
   padding: 3px 9px; border-radius: 6px;
 }
-.bundle-deals-section { background: linear-gradient(135deg, #fdf4ff, #fff7ed); padding: 40px 0; }
+.bundle-deals-section { background: linear-gradient(135deg, #FDF0F3, #FFF7ED); padding: 40px 0; }
 
 /* ══════════════════════════════════════════════════
    RESPONSIVE
