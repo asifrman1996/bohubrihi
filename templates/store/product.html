@@ -255,6 +255,15 @@
 
 {% block scripts %}
 <script>
+  fbq('track', 'ViewContent', {
+    content_ids: ['{{ product.id }}'],
+    content_name: '{{ product.name|replace("'", "\\'") }}',
+    content_type: 'product',
+    value: {{ product.price }},
+    currency: 'BDT'
+  });
+</script>
+<script>
 (function () {
   const stars = document.querySelectorAll('#starPicker span');
   const input = document.getElementById('ratingInput');

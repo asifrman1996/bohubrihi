@@ -110,4 +110,15 @@
     </div>
   </div>
 </div>
+{% block scripts %}
+<script>
+  fbq('track', 'ViewContent', {
+    content_ids: ['bundle_{{ bundle.id }}'],
+    content_name: '{{ bundle.name|replace("'", "\\'") }}',
+    content_type: 'product_group',
+    value: {{ bundle.price }},
+    currency: 'BDT'
+  });
+</script>
+{% endblock %}
 {% endblock %}
