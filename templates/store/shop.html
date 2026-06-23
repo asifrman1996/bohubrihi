@@ -5,25 +5,22 @@
 <div style="background: var(--navy); padding: 28px 0; margin-bottom: 0;">
   <div class="container">
     <h1 style="color:#fff; font-size:1.8rem; font-weight:800;">
-      {% if active_cat %}{{ active_cat.icon }} {{ active_cat.name }}
+      {% if active_cat %}{{ active_cat.name }}
       {% elif search %}Search: "{{ search }}"
-      {% else %}🛍 All Products{% endif %}
+      {% else %}All Products{% endif %}
     </h1>
-    <p style="color:#94a3b8; margin-top:4px;">{{ products|length }} product{% if products|length != 1 %}s{% endif %} found</p>
+    <p style="color:#E8C4CC; margin-top:4px;">{{ products|length }} product{% if products|length != 1 %}s{% endif %} found</p>
   </div>
 </div>
 
 <!-- Category Filter Bar -->
 <div class="categories-section" style="position:sticky; top:64px; z-index:90;">
   <div class="categories-scroll">
-    <a href="{{ url_for('shop') }}" class="cat-chip {% if not active_cat and not search %}active{% endif %}">
-      <span class="icon">🌿</span><span class="label">All</span>
-    </a>
+    <a href="{{ url_for('shop') }}" class="cat-chip {% if not active_cat and not search %}active{% endif %}">All</a>
     {% for cat in categories %}
     <a href="{{ url_for('shop') }}?category={{ cat.slug }}"
        class="cat-chip {% if active_cat and active_cat.id == cat.id %}active{% endif %}">
-      <span class="icon">{{ cat.icon }}</span>
-      <span class="label">{{ cat.name }}</span>
+      {{ cat.name }}
     </a>
     {% endfor %}
   </div>
@@ -35,14 +32,14 @@
     <form class="search-bar" action="{{ url_for('shop') }}" method="get">
       {% if active_cat %}<input type="hidden" name="category" value="{{ active_cat.slug }}">{% endif %}
       <input type="text" name="q" placeholder="Search products…" value="{{ search }}">
-      <button type="submit">🔍</button>
+      <button type="submit">Search</button>
     </form>
   </div>
 
   {% if bundles %}
   <div class="bundle-deals-section" style="margin: 0 0 32px; border-radius:16px; padding:28px 24px;">
     <div class="section-header">
-      <h2 class="section-title">🎁 <span>Bundle</span> Deals</h2>
+      <h2 class="section-title"><span>Bundle</span> Deals</h2>
     </div>
     <div class="product-grid">
       {% for b in bundles %}
@@ -51,13 +48,18 @@
           {% if b.image %}
             <img src="{{ image_url(b.image) }}" alt="{{ b.name }}">
           {% else %}
-            <div class="product-img-placeholder">🎁</div>
+            <div class="product-img-placeholder">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C8A0AC" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </div>
           {% endif %}
-          {% if b.is_deal %}<span class="badge-deal">🎁 Bundle Deal</span>{% endif %}
+          {% if b.is_deal %}<span class="badge-deal">Bundle Deal</span>{% endif %}
           {% if b.savings > 0 %}<span class="badge-savings">Save ৳{{ b.savings|int }}</span>{% endif %}
         </a>
         <div class="product-info">
-          <div class="product-cat">🎁 Bundle · {{ b.items|length }} item{{ 's' if b.items|length != 1 }}</div>
+          <div class="product-cat">Bundle · {{ b.items|length }} item{{ 's' if b.items|length != 1 }}</div>
           <a href="{{ url_for('bundle_detail', bid=b.id) }}" class="product-name">{{ b.name }}</a>
           {% if b.description %}<div class="product-desc">{{ b.description }}</div>{% endif %}
           <div class="product-footer">
@@ -84,10 +86,15 @@
         {% if p.image %}
           <img src="{{ image_url(p.image) }}" alt="{{ p.name }}">
         {% else %}
-          <div class="product-img-placeholder">{{ p.category.icon }}</div>
+          <div class="product-img-placeholder">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C8A0AC" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </div>
         {% endif %}
         {% if p.original_price %}<span class="badge-sale">SALE</span>{% endif %}
-        {% if p.featured %}<span class="badge-feat">★</span>{% endif %}
+        {% if p.featured %}<span class="badge-feat">Featured</span>{% endif %}
       </a>
       <div class="product-info">
         <div class="product-cat">{{ p.category.name }}</div>
