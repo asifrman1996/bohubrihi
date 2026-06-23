@@ -718,10 +718,12 @@ def admin_settings():
     total_products = Product.query.count()
     total_orders = Order.query.count()
     total_categories = Category.query.count()
+    db_label = 'PostgreSQL (Supabase)' if os.environ.get('DATABASE_URL') else 'SQLite (bohubrihi.db)'
     return render_template('admin/settings.html',
                            total_products=total_products,
                            total_orders=total_orders,
-                           total_categories=total_categories)
+                           total_categories=total_categories,
+                           db_label=db_label)
 
 
 with app.app_context():
