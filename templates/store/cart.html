@@ -2,13 +2,15 @@
 {% block title %}Cart – Bohubrihi{% endblock %}
 
 {% block content %}
-<div class="container" style="padding: 40px 20px;">
-  <h1 style="color:var(--navy); margin-bottom:32px;">🛒 Your Cart</h1>
+<div class="container" style="padding-top: 28px;">
+  <h1 style="color:var(--navy); margin-bottom:24px; font-size:1.6rem;">Your Cart</h1>
   <div id="fullCartWrap">
+    <!-- Empty state (replaced by JS if cart has items) -->
     <div style="text-align:center; padding:80px 0; color:var(--muted);">
-      <div style="font-size:4rem; margin-bottom:16px;">🛒</div>
-      <h3>Your cart is empty</h3>
-      <a href="{{ url_for('shop') }}" class="btn btn-primary" style="display:inline-flex;margin-top:20px;">Shop Now</a>
+      <div style="font-size:3.5rem; margin-bottom:16px;">🛒</div>
+      <h3 style="color:var(--navy); margin-bottom:8px;">Your cart is empty</h3>
+      <p style="margin-bottom:20px;">Add some products to get started.</p>
+      <a href="{{ url_for('shop') }}" class="btn btn-primary" style="display:inline-flex;">Shop Now</a>
     </div>
   </div>
 </div>
@@ -21,46 +23,48 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!cart || cart.length === 0) return;
 
   let total = 0;
-  let rows = cart.map(item => {
+
+  const itemsHtml = cart.map(item => {
     const sub = item.price * item.qty;
     total += sub;
-    return `<tr>
-      <td><div style="display:flex;align-items:center;gap:12px;">
-        <div style="width:56px;height:56px;border-radius:8px;background:#f0fdfa;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">
-          ${item.image ? `<img src="${imageSrc(item.image)}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;">` : getCatIcon(item.cat)}
+    const imgHtml = item.image
+      ? `<img src="${imageSrc(item.image)}" alt="${item.name}">`
+      : `<span>${getCatIcon(item.cat)}</span>`;
+    return `
+      <div class="cart-page-item">
+        <div class="cart-page-item-img">${imgHtml}</div>
+        <div class="cart-page-item-info">
+          <div class="cart-page-item-name">${item.name}</div>
+          <div class="cart-page-item-meta">${item.cat || ''}</div>
+          <div class="cart-page-item-row">
+            <div class="qty-ctrl">
+              <button class="qty-btn" onclick="updateQty(${item.id},-1,'${item.type||'product'}');location.reload()">−</button>
+              <span class="qty-num">${item.qty}</span>
+              <button class="qty-btn" onclick="updateQty(${item.id},1,'${item.type||'product'}');location.reload()">+</button>
+            </div>
+            <span class="cart-page-item-price">৳${item.price} each</span>
+          </div>
         </div>
-        <div>
-          <div style="font-weight:700;color:var(--navy);">${item.name}</div>
-          <div style="font-size:.8rem;color:var(--muted);">${item.cat || ''}</div>
+        <div class="cart-page-item-right">
+          <button class="cart-page-remove" onclick="removeFromCart(${item.id},'${item.type||'product'}');location.reload()" title="Remove">✕</button>
+          <span class="cart-page-item-sub">৳${sub.toFixed(0)}</span>
         </div>
-      </div></td>
-      <td style="font-weight:700;">৳${item.price}</td>
-      <td>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <button class="qty-btn" onclick="updateQty(${item.id},-1,'${item.type || 'product'}');location.reload()">−</button>
-          <span style="font-weight:700;min-width:20px;text-align:center;">${item.qty}</span>
-          <button class="qty-btn" onclick="updateQty(${item.id},1,'${item.type || 'product'}');location.reload()">+</button>
-        </div>
-      </td>
-      <td style="font-weight:700;color:var(--teal-dark);">৳${sub.toFixed(0)}</td>
-      <td><button class="btn-sm btn-red" onclick="removeFromCart(${item.id},'${item.type || 'product'}');location.reload()">🗑 Remove</button></td>
-    </tr>`;
+      </div>`;
   }).join('');
 
   wrap.innerHTML = `
-    <div class="admin-table-wrap">
-      <table>
-        <thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Subtotal</th><th></th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-    <div style="display:flex;justify-content:flex-end;margin-top:24px;">
-      <div style="background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;min-width:300px;">
-        <div style="display:flex;justify-content:space-between;font-size:1.2rem;font-weight:800;margin-bottom:20px;">
-          <span>Total:</span>
-          <span style="color:var(--teal-dark);">৳${total.toFixed(0)}</span>
+    <div class="cart-page-layout">
+      <div class="cart-page-items-col">
+        ${itemsHtml}
+        <a href="/shop" style="display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:.85rem;margin-top:20px;text-decoration:none;">← Continue Shopping</a>
+      </div>
+      <div class="cart-page-summary-col">
+        <div class="cart-page-total-row">
+          <span>Total</span>
+          <span class="cart-page-total-val">৳${total.toFixed(0)}</span>
         </div>
-        <a href="/checkout" class="btn-checkout">Proceed to Checkout →</a>
+        <a href="/checkout" class="btn-checkout" style="display:block;text-align:center;">Proceed to Checkout →</a>
+        <p style="text-align:center;font-size:.75rem;color:var(--muted);margin-top:10px;margin-bottom:0;">Free delivery on orders above ৳2500</p>
       </div>
     </div>`;
 });
