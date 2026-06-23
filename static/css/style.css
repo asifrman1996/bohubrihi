@@ -562,8 +562,12 @@ tbody tr:hover { background: #FFF7F9; }
 .cart-page-layout {
   display: flex;
   flex-direction: column;
+  min-height: calc(100dvh - 80px);
 }
-.cart-page-items-col { flex: 1; }
+.cart-page-items-col {
+  flex: 1;
+  padding-bottom: 16px;
+}
 
 .cart-page-item {
   display: flex;
@@ -603,11 +607,9 @@ tbody tr:hover { background: #FFF7F9; }
 .cart-page-remove:hover { color: var(--teal); }
 
 .cart-page-summary-col {
-  position: sticky;
-  bottom: 0;
   background: #fff;
   padding: 16px;
-  padding-bottom: max(env(safe-area-inset-bottom), 16px);
+  padding-bottom: max(env(safe-area-inset-bottom), 24px);
   border-top: 2px solid var(--border);
   box-shadow: 0 -4px 20px rgba(60,13,30,.10);
 }
