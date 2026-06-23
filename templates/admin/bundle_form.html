@@ -52,7 +52,7 @@
         <label>Bundle Image</label>
         {% if bundle and bundle.image %}
         <div class="current-img-wrap">
-          <img src="{{ url_for('static', filename='uploads/' + bundle.image) }}" style="width:80px; height:80px; border-radius:8px; object-fit:cover;">
+          <img src="{{ image_url(bundle.image) }}" style="width:80px; height:80px; border-radius:8px; object-fit:cover;">
           <span style="font-size:.85rem; color:var(--muted);">Current image — upload a new one to replace</span>
         </div>
         {% endif %}
@@ -101,9 +101,11 @@ const productsById = {};
 ALL_PRODUCTS.forEach(p => { productsById[p.id] = p; });
 
 function productThumb(p) {
-  return p.image
-    ? `<img src="/static/uploads/${p.image}" alt="${p.name}">`
-    : '🌿';
+  if (!p.image) return '🌿';
+  const src = p.image.startsWith('http://') || p.image.startsWith('https://')
+    ? p.image
+    : `/static/uploads/${p.image}`;
+  return `<img src="${src}" alt="${p.name}">`;
 }
 
 function renderSearchResults(term) {

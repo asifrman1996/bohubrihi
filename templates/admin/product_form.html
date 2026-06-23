@@ -60,7 +60,7 @@
         <label>Product Image</label>
         {% if product and product.image %}
         <div class="current-img-wrap">
-          <img src="{{ url_for('static', filename='uploads/' + product.image) }}" style="width:80px; height:80px; border-radius:8px; object-fit:cover;">
+          <img src="{{ image_url(product.image) }}" style="width:80px; height:80px; border-radius:8px; object-fit:cover;">
           <span style="font-size:.85rem; color:var(--muted);">Current image — upload a new one to replace</span>
         </div>
         {% endif %}

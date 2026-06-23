@@ -37,7 +37,7 @@
         <td>
           <div class="td-img">
             {% if p.image %}
-              <img src="{{ url_for('static', filename='uploads/' + p.image) }}" alt="{{ p.name }}">
+              <img src="{{ image_url(p.image) }}" alt="{{ p.name }}">
             {% else %}
               {{ p.category.icon }}
             {% endif %}

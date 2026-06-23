@@ -54,7 +54,7 @@ function renderCartItems() {
   el.innerHTML = cart.map(item => `
     <div class="cart-item">
       <div class="cart-item-img">${item.image
-        ? `<img src="/static/uploads/${item.image}" alt="${item.name}">`
+        ? `<img src="${imageSrc(item.image)}" alt="${item.name}">`
         : getCatIcon(item.cat)}</div>
       <div class="cart-item-info">
         <div class="cart-item-name">${item.name}</div>
@@ -70,6 +70,13 @@ function renderCartItems() {
   `).join('');
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   document.getElementById('cartTotal').textContent = total.toFixed(0);
+}
+
+function imageSrc(image) {
+  if (!image) return '';
+  return image.startsWith('http://') || image.startsWith('https://')
+    ? image
+    : `/static/uploads/${image}`;
 }
 
 function getCatIcon(cat) {

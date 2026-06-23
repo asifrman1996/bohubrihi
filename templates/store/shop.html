@@ -49,7 +49,7 @@
       <div class="product-card">
         <div class="product-img-wrap">
           {% if b.image %}
-            <img src="{{ url_for('static', filename='uploads/' + b.image) }}" alt="{{ b.name }}">
+            <img src="{{ image_url(b.image) }}" alt="{{ b.name }}">
           {% else %}
             <div class="product-img-placeholder">🎁</div>
           {% endif %}
@@ -82,7 +82,7 @@
     <div class="product-card">
       <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-img-wrap">
         {% if p.image %}
-          <img src="{{ url_for('static', filename='uploads/' + p.image) }}" alt="{{ p.name }}">
+          <img src="{{ image_url(p.image) }}" alt="{{ p.name }}">
         {% else %}
           <div class="product-img-placeholder">{{ p.category.icon }}</div>
         {% endif %}

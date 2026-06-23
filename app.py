@@ -162,6 +162,80 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '')
+SUPABASE_BUCKET = 'product-images'
+
+supabase_client = None
+if SUPABASE_URL and SUPABASE_KEY:
+    try:
+        from supabase import create_client
+        supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        print("Image storage: Supabase Storage (product-images)", file=sys.stderr)
+    except Exception as e:
+        print(f"Supabase Storage: failed to init client, falling back to local uploads: {e}", file=sys.stderr)
+else:
+    print("Image storage: local static/uploads/", file=sys.stderr)
+
+
+def _unique_filename(original_filename):
+    filename = secure_filename(original_filename)
+    base, ext = os.path.splitext(filename)
+    return f"{base}_{int(datetime.utcnow().timestamp())}{ext}"
+
+
+def save_uploaded_image(file_storage):
+    """Save an uploaded image and return the value to store in the image column:
+    a public URL when Supabase Storage is configured, otherwise a local filename."""
+    if not file_storage or not file_storage.filename or not allowed_file(file_storage.filename):
+        return ''
+    filename = _unique_filename(file_storage.filename)
+
+    if supabase_client:
+        try:
+            file_bytes = file_storage.read()
+            content_type = file_storage.mimetype or 'application/octet-stream'
+            supabase_client.storage.from_(SUPABASE_BUCKET).upload(
+                filename, file_bytes, {'content-type': content_type}
+            )
+            return supabase_client.storage.from_(SUPABASE_BUCKET).get_public_url(filename)
+        except Exception as e:
+            print(f"Supabase Storage upload failed, image not saved: {e}", file=sys.stderr)
+            return ''
+
+    file_storage.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    return filename
+
+
+def delete_uploaded_image(image_value):
+    """Delete a previously saved image, whether it's a Supabase public URL or a local filename."""
+    if not image_value:
+        return
+    if image_value.startswith('http://') or image_value.startswith('https://'):
+        if not supabase_client:
+            return
+        try:
+            marker = f'/object/public/{SUPABASE_BUCKET}/'
+            if marker in image_value:
+                path = image_value.split(marker, 1)[1]
+                supabase_client.storage.from_(SUPABASE_BUCKET).remove([path])
+        except Exception as e:
+            print(f"Supabase Storage delete failed: {e}", file=sys.stderr)
+    else:
+        local_path = os.path.join(app.config['UPLOAD_FOLDER'], image_value)
+        if os.path.exists(local_path):
+            os.remove(local_path)
+
+
+@app.template_global()
+def image_url(image):
+    if not image:
+        return ''
+    if image.startswith('http://') or image.startswith('https://'):
+        return image
+    return url_for('static', filename='uploads/' + image)
+
+
 def admin_required(f):
     from functools import wraps
     @wraps(f)
@@ -402,15 +476,7 @@ def admin_products():
 def admin_add_product():
     categories = Category.query.order_by(Category.sort_order).all()
     if request.method == 'POST':
-        image_filename = ''
-        if 'image' in request.files:
-            f = request.files['image']
-            if f and f.filename and allowed_file(f.filename):
-                image_filename = secure_filename(f.filename)
-                # Prevent collisions
-                base, ext = os.path.splitext(image_filename)
-                image_filename = f"{base}_{int(datetime.utcnow().timestamp())}{ext}"
-                f.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
+        image_filename = save_uploaded_image(request.files.get('image'))
         orig = request.form.get('original_price', '').strip()
         product = Product(
             name=request.form['name'],
@@ -437,18 +503,12 @@ def admin_edit_product(pid):
     product = Product.query.get_or_404(pid)
     categories = Category.query.order_by(Category.sort_order).all()
     if request.method == 'POST':
-        if 'image' in request.files:
-            f = request.files['image']
-            if f and f.filename and allowed_file(f.filename):
-                if product.image:
-                    old_path = os.path.join(app.config['UPLOAD_FOLDER'], product.image)
-                    if os.path.exists(old_path):
-                        os.remove(old_path)
-                image_filename = secure_filename(f.filename)
-                base, ext = os.path.splitext(image_filename)
-                image_filename = f"{base}_{int(datetime.utcnow().timestamp())}{ext}"
-                f.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
-                product.image = image_filename
+        f = request.files.get('image')
+        if f and f.filename:
+            new_image = save_uploaded_image(f)
+            if new_image:
+                delete_uploaded_image(product.image)
+                product.image = new_image
         orig = request.form.get('original_price', '').strip()
         product.name = request.form['name']
         product.description = request.form.get('description', '')
@@ -469,10 +529,7 @@ def admin_edit_product(pid):
 @admin_required
 def admin_delete_product(pid):
     product = Product.query.get_or_404(pid)
-    if product.image:
-        img_path = os.path.join(app.config['UPLOAD_FOLDER'], product.image)
-        if os.path.exists(img_path):
-            os.remove(img_path)
+    delete_uploaded_image(product.image)
     name = product.name
     db.session.delete(product)
     db.session.commit()
@@ -614,14 +671,7 @@ def admin_add_bundle():
             flash('Select at least one product for the bundle.', 'error')
             return render_template('admin/bundle_form.html', bundle=None,
                                    products=_products_data(), selected_items=[])
-        image_filename = ''
-        if 'image' in request.files:
-            f = request.files['image']
-            if f and f.filename and allowed_file(f.filename):
-                image_filename = secure_filename(f.filename)
-                base, ext = os.path.splitext(image_filename)
-                image_filename = f"{base}_{int(datetime.utcnow().timestamp())}{ext}"
-                f.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
+        image_filename = save_uploaded_image(request.files.get('image'))
         original_price = sum(p.price * qty for p, qty in items)
         bundle = Bundle(
             name=request.form['name'],
@@ -655,18 +705,12 @@ def admin_edit_bundle(bid):
             selected_items = [{'product_id': bi.product_id, 'qty': bi.quantity} for bi in bundle.items]
             return render_template('admin/bundle_form.html', bundle=bundle,
                                    products=_products_data(), selected_items=selected_items)
-        if 'image' in request.files:
-            f = request.files['image']
-            if f and f.filename and allowed_file(f.filename):
-                if bundle.image:
-                    old_path = os.path.join(app.config['UPLOAD_FOLDER'], bundle.image)
-                    if os.path.exists(old_path):
-                        os.remove(old_path)
-                image_filename = secure_filename(f.filename)
-                base, ext = os.path.splitext(image_filename)
-                image_filename = f"{base}_{int(datetime.utcnow().timestamp())}{ext}"
-                f.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
-                bundle.image = image_filename
+        f = request.files.get('image')
+        if f and f.filename:
+            new_image = save_uploaded_image(f)
+            if new_image:
+                delete_uploaded_image(bundle.image)
+                bundle.image = new_image
         bundle.name = request.form['name']
         bundle.description = request.form.get('description', '')
         bundle.price = float(request.form['price'])
@@ -689,10 +733,7 @@ def admin_edit_bundle(bid):
 @admin_required
 def admin_delete_bundle(bid):
     bundle = Bundle.query.get_or_404(bid)
-    if bundle.image:
-        img_path = os.path.join(app.config['UPLOAD_FOLDER'], bundle.image)
-        if os.path.exists(img_path):
-            os.remove(img_path)
+    delete_uploaded_image(bundle.image)
     name = bundle.name
     db.session.delete(bundle)
     db.session.commit()
