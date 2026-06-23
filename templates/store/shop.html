@@ -47,7 +47,7 @@
     <div class="product-grid">
       {% for b in bundles %}
       <div class="product-card">
-        <div class="product-img-wrap">
+        <a href="{{ url_for('bundle_detail', bid=b.id) }}" class="product-img-wrap">
           {% if b.image %}
             <img src="{{ image_url(b.image) }}" alt="{{ b.name }}">
           {% else %}
@@ -55,10 +55,10 @@
           {% endif %}
           {% if b.is_deal %}<span class="badge-deal">🎁 Bundle Deal</span>{% endif %}
           {% if b.savings > 0 %}<span class="badge-savings">Save ৳{{ b.savings|int }}</span>{% endif %}
-        </div>
+        </a>
         <div class="product-info">
           <div class="product-cat">🎁 Bundle · {{ b.items|length }} item{{ 's' if b.items|length != 1 }}</div>
-          <div class="product-name">{{ b.name }}</div>
+          <a href="{{ url_for('bundle_detail', bid=b.id) }}" class="product-name">{{ b.name }}</a>
           {% if b.description %}<div class="product-desc">{{ b.description }}</div>{% endif %}
           <div class="product-footer">
             <div class="price-wrap">

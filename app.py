@@ -369,6 +369,12 @@ def product_detail(pid):
                            complementary=complementary, reviews=reviews, avg_rating=avg_rating)
 
 
+@app.route('/bundle/<int:bid>')
+def bundle_detail(bid):
+    bundle = Bundle.query.get_or_404(bid)
+    return render_template('store/bundle.html', bundle=bundle)
+
+
 @app.route('/product/<int:pid>/review', methods=['POST'])
 def submit_review(pid):
     Product.query.get_or_404(pid)
