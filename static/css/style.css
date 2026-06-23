@@ -465,6 +465,13 @@ tbody tr:hover { background: #FFF7F9; }
    RESPONSIVE  ≤ 540px  (mobile)
 ══════════════════════════════════════════════════ */
 @media (max-width: 540px) {
+  /* ── Header: prevent Cart button overflow ── */
+  .header-inner { padding: 10px 12px; }
+  .logo         { font-size: 1.15rem; }
+  nav           { gap: 12px; }
+  nav a         { font-size: .8rem; }
+  .cart-btn     { padding: 6px 10px; font-size: .8rem; gap: 4px; }
+
   .hero h1      { font-size: 2rem; }
   .hero p       { font-size: 1rem; }
   .hero-btns    { flex-direction: column; }
@@ -518,4 +525,18 @@ tbody tr:hover { background: #FFF7F9; }
   .footer-grid  { gap: 24px; }
   footer        { padding: 36px 0 20px; }
   .section      { padding: 40px 0; }
+
+  /* ── Why Choose grid: force single column ── */
+  .why-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+  .why-card { padding: 20px 16px !important; }
+
+  /* ── Product reviews: force single column ── */
+  .reviews-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
+
+  /* ── Messenger FAB: smaller, doesn't block content ── */
+  .messenger-fab {
+    width: 46px !important; height: 46px !important;
+    bottom: 14px !important; right: 12px !important;
+  }
+  .messenger-fab svg { width: 22px !important; height: 22px !important; }
 }
