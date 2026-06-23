@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 from datetime import datetime
@@ -453,6 +453,43 @@ def checkout():
 @app.route('/about')
 def about():
     return render_template('store/about.html')
+
+
+@app.route('/sitemap.xml')
+def sitemap():
+    base = request.url_root.rstrip('/')
+    pages = [
+        {'loc': base + '/',      'priority': '1.0', 'changefreq': 'weekly'},
+        {'loc': base + '/shop',  'priority': '0.9', 'changefreq': 'daily'},
+        {'loc': base + '/about', 'priority': '0.6', 'changefreq': 'monthly'},
+    ]
+    for cat in Category.query.order_by(Category.sort_order).all():
+        pages.append({'loc': f"{base}/shop?category={cat.slug}",
+                      'priority': '0.8', 'changefreq': 'weekly'})
+    for p in Product.query.filter_by(in_stock=True).order_by(Product.id).all():
+        pages.append({'loc': f"{base}/product/{p.id}",
+                      'lastmod': p.created_at.strftime('%Y-%m-%d'),
+                      'priority': '0.7', 'changefreq': 'monthly'})
+    for b in Bundle.query.filter_by(in_stock=True).order_by(Bundle.id).all():
+        pages.append({'loc': f"{base}/bundle/{b.id}",
+                      'lastmod': b.created_at.strftime('%Y-%m-%d'),
+                      'priority': '0.7', 'changefreq': 'monthly'})
+
+    lines = ['<?xml version="1.0" encoding="UTF-8"?>',
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for p in pages:
+        lines.append('  <url>')
+        lines.append(f'    <loc>{p["loc"]}</loc>')
+        if 'lastmod' in p:
+            lines.append(f'    <lastmod>{p["lastmod"]}</lastmod>')
+        lines.append(f'    <changefreq>{p["changefreq"]}</changefreq>')
+        lines.append(f'    <priority>{p["priority"]}</priority>')
+        lines.append('  </url>')
+    lines.append('</urlset>')
+
+    resp = make_response('\n'.join(lines))
+    resp.headers['Content-Type'] = 'application/xml'
+    return resp
 
 
 @app.route('/order-success/<int:oid>')
