@@ -60,6 +60,7 @@ header {
   font-weight: 800;
   letter-spacing: -0.5px;
 }
+.logo-img { height: 45px; vertical-align: middle; }
 .logo span { color: var(--lime); }
 .logo small {
   display: block;

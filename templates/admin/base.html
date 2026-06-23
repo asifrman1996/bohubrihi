@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Admin – Bohubrihi{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v={{ cache_bust }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='uploads/logo.png') }}?v={{ cache_bust }}">
 </head>
 <body>
 
@@ -16,10 +17,16 @@
 
     <!-- Brand -->
     <div class="sidebar-header">
-      <div class="sidebar-brand-icon">B</div>
-      <div class="sidebar-brand-text">
-        <strong>Bohubrihi</strong>
-        <small>Admin Panel</small>
+      <div class="sidebar-brand">
+        <img src="{{ url_for('static', filename='uploads/logo.png') }}?v={{ cache_bust }}" alt="Bohubrihi" class="sidebar-logo-img"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="sidebar-brand-fallback" style="display:none;">
+          <div class="sidebar-brand-icon">B</div>
+          <div class="sidebar-brand-text">
+            <strong>Bohubrihi</strong>
+            <small>Admin Panel</small>
+          </div>
+        </div>
       </div>
       <button class="sidebar-toggle" id="sidebarToggleBtn" title="Collapse sidebar">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">

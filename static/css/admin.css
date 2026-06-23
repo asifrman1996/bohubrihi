@@ -87,6 +87,12 @@ button { cursor: pointer; border: none; }
   border-bottom: 1px solid rgba(255,255,255,.08);
   flex-shrink: 0;
 }
+.sidebar-brand {
+  display: flex; align-items: center; gap: 12px;
+  flex: 1; min-width: 0; overflow: hidden;
+}
+.sidebar-logo-img { height: 45px; max-width: 100%; object-fit: contain; display: block; }
+.sidebar-brand-fallback { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .sidebar-brand-icon {
   width: 36px; height: 36px;
   background: var(--teal);
@@ -194,6 +200,7 @@ button { cursor: pointer; border: none; }
 .admin-sidebar.collapsed { width: var(--sidebar-w-collapsed); }
 
 .admin-sidebar.collapsed .sidebar-brand-text { display: none; }
+.admin-sidebar.collapsed .sidebar-logo-img   { height: 32px; }
 .admin-sidebar.collapsed .nav-label          { display: none; }
 
 .admin-sidebar.collapsed .sidebar-header {

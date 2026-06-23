@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Bohubrihi Organic Skincare{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_bust }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='uploads/logo.png') }}?v={{ cache_bust }}">
   <!-- Meta Pixel Code -->
   <script>
   !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -26,7 +27,9 @@
 <header>
   <div class="header-inner">
     <a href="{{ url_for('index') }}" class="logo">
-      Bohubrihi<span>.</span>
+      <img src="{{ url_for('static', filename='uploads/logo.png') }}?v={{ cache_bust }}" alt="Bohubrihi" class="logo-img"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+      <span class="logo-fallback-text" style="display:none;">Bohubrihi<span>.</span></span>
       <small>Organic Skincare</small>
     </a>
     <nav>

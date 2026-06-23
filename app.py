@@ -796,15 +796,24 @@ def admin_settings():
             else:
                 # In a real app this would persist; here we just acknowledge
                 flash('Password updated successfully! Update ADMIN_PASSWORD_HASH in app.py to make it permanent.', 'success')
+        elif action == 'upload_logo':
+            f = request.files.get('logo')
+            if f and f.filename and f.filename.lower().endswith('.png'):
+                f.save(os.path.join(app.config['UPLOAD_FOLDER'], 'logo.png'))
+                flash('Logo updated! It may take a moment to show up everywhere due to browser caching.', 'success')
+            else:
+                flash('Please upload a PNG file.', 'error')
     total_products = Product.query.count()
     total_orders = Order.query.count()
     total_categories = Category.query.count()
     db_label = 'PostgreSQL (Supabase)' if os.environ.get('DATABASE_URL') else 'SQLite (bohubrihi.db)'
+    logo_exists = os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], 'logo.png'))
     return render_template('admin/settings.html',
                            total_products=total_products,
                            total_orders=total_orders,
                            total_categories=total_categories,
-                           db_label=db_label)
+                           db_label=db_label,
+                           logo_exists=logo_exists)
 
 
 with app.app_context():
