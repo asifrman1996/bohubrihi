@@ -18,6 +18,11 @@ if _db_url.startswith('postgres://'):
     _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
 app.config['SQLALCHEMY_DATABASE_URI'] = _db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+if _db_url.startswith('postgresql://'):
+    # The Supabase session pooler recycles idle connections; pre_ping
+    # detects a dropped connection and reconnects instead of raising.
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_pre_ping': True}
+print(f"Database: {'PostgreSQL' if _db_url.startswith('postgresql://') else 'SQLite'}", file=sys.stderr)
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
