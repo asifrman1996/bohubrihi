@@ -20,11 +20,18 @@ app.config['SQLALCHEMY_DATABASE_URI'] = _db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 ADMIN_PASSWORD_HASH = hashlib.sha256(b'admin123').hexdigest()
 
 db = SQLAlchemy(app)
+
+
+@app.context_processor
+def inject_version():
+    import time
+    return dict(cache_bust=str(int(time.time())))
 
 
 class Category(db.Model):
