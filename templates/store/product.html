@@ -72,15 +72,7 @@
         </div>
 
         <!-- Short description -->
-        <div class="pd-short-desc">
-          {% set _desc = product.description %}
-          {% if _desc|length > 200 %}
-            <p id="pdDescShort">{{ _desc[:200] }}<span id="pdDescEllipsis">… <button class="pd-read-more" onclick="expandDesc()">Read more</button></span></p>
-            <p id="pdDescFull" style="display:none;">{{ _desc }}</p>
-          {% else %}
-            <p>{{ _desc }}</p>
-          {% endif %}
-        </div>
+        <div class="pd-short-desc pd-rich-text">{{ product.description | safe }}</div>
 
         <!-- Add to cart -->
         {% if product.in_stock %}
@@ -144,7 +136,7 @@
       <div class="pd-desc-inner">
         <div class="pd-desc-text">
           <h2 class="pd-section-title">About This <span>Product</span></h2>
-          <div class="pd-desc-body">{{ product.description }}</div>
+          <div class="pd-desc-body pd-rich-text">{{ product.description | safe }}</div>
           {% if product.ingredients %}
           <div class="pd-ingredients-text">
             <strong>Ingredients:</strong> {{ product.ingredients }}
@@ -338,11 +330,6 @@ function shareProduct() {
       setTimeout(() => { btn.innerHTML = orig; }, 2000);
     });
   }
-}
-
-function expandDesc() {
-  document.getElementById('pdDescShort').style.display = 'none';
-  document.getElementById('pdDescFull').style.display = 'block';
 }
 
 function toggleFaq(btn) {

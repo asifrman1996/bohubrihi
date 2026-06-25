@@ -3,12 +3,22 @@
 {% block page_title %}{{ '✏️ Edit Product' if product else '➕ Add New Product' }}{% endblock %}
 
 {% block content %}
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<style>
+  #descEditor { min-height: 220px; font-size: .95rem; font-family: 'Segoe UI', system-ui, sans-serif; }
+  .ql-container { border-radius: 0 0 8px 8px; border-color: var(--border) !important; }
+  .ql-toolbar { border-radius: 8px 8px 0 0; border-color: var(--border) !important; background: #f8fafc; }
+  .ql-container.ql-snow:focus-within,
+  .ql-toolbar.ql-snow:focus-within { border-color: var(--teal) !important; }
+  .ql-editor { min-height: 200px; }
+</style>
+
 <div style="margin-bottom:16px;">
   <a href="{{ url_for('admin_products') }}" style="color:var(--teal); font-size:.9rem;">← Back to Products</a>
 </div>
 
 <div class="admin-form-card">
-  <form method="POST" enctype="multipart/form-data">
+  <form method="POST" enctype="multipart/form-data" id="productForm">
 
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
       <div class="form-group" style="grid-column:1/-1;">
@@ -47,7 +57,8 @@
 
       <div class="form-group" style="grid-column:1/-1;">
         <label>Description</label>
-        <textarea name="description" rows="4" placeholder="Describe the product, its benefits, how to use…">{{ product.description if product else '' }}</textarea>
+        <div id="descEditor">{% if product and product.description %}{{ product.description | safe }}{% endif %}</div>
+        <input type="hidden" name="description" id="descInput">
       </div>
 
       <div class="form-group" style="grid-column:1/-1;">
@@ -160,7 +171,25 @@
 </div>
 {% endif %}
 
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <script>
+var descQuill = new Quill('#descEditor', {
+  theme: 'snow',
+  modules: {
+    toolbar: [
+      [{ header: [2, 3, false] }],
+      ['bold', 'italic', 'underline'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['blockquote', 'link'],
+      ['clean']
+    ]
+  }
+});
+
+document.getElementById('productForm').addEventListener('submit', function () {
+  document.getElementById('descInput').value = descQuill.root.innerHTML;
+});
+
 document.getElementById('imgInput').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (file) {
