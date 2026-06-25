@@ -4,18 +4,23 @@
 {% block content %}
 
 <!-- ── Hero ─────────────────────────────────────────────────────── -->
+{% set _hero_img = get_setting('hero_image_url') %}
 <section class="hero">
-  {% set _hero_img = get_setting('hero_image_url') %}
-  <div class="hero-bg"{% if _hero_img %} style="background-image:url('{{ image_url(_hero_img) }}')"{% endif %}></div>
-  <div class="hero-overlay"></div>
-  <div class="hero-content">
-    <h1>{{ get_setting('hero_headline') or 'Pure Nature,<br>Beautiful Skin' | safe }}</h1>
-    <p>{{ get_setting('hero_subheadline') or 'Handcrafted organic skincare made with the finest natural ingredients. No chemicals, no compromises.' }}</p>
-    <div class="hero-btns">
-      <a href="{{ get_setting('hero_button_link') or url_for('shop') }}" class="btn btn-primary">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <p class="hero-eyebrow">100% Natural &nbsp;·&nbsp; Handcrafted in Bangladesh</p>
+      <h1 class="hero-headline">{{ (get_setting('hero_headline') or 'Pure Nature,<br>Beautiful Skin') | safe }}</h1>
+      <p class="hero-sub">{{ get_setting('hero_subheadline') or 'Handcrafted organic skincare made with the finest natural ingredients. No chemicals, no compromises.' }}</p>
+      <a href="{{ get_setting('hero_button_link') or url_for('shop') }}" class="btn btn-primary hero-cta">
         {{ get_setting('hero_button_text') or 'Shop Now' }}
       </a>
-      <a href="#featured" class="btn btn-outline">View Featured</a>
+    </div>
+    <div class="hero-img-col">
+      {% if _hero_img %}
+      <img src="{{ image_url(_hero_img) }}" alt="Bohubrihi Organic Skincare" class="hero-product-img">
+      {% else %}
+      <div class="hero-img-empty"></div>
+      {% endif %}
     </div>
   </div>
 </section>

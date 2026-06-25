@@ -305,6 +305,7 @@
     megaMenu.setAttribute('aria-hidden', 'true');
   }
   shopAllBtn.addEventListener('click', function (e) {
+    if (window.matchMedia('(min-width: 900px)').matches) return;
     e.stopPropagation();
     megaMenu.classList.contains('open') ? closeMega() : openMega();
   });
