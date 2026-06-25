@@ -34,6 +34,10 @@
 <body>
 
 <header>
+  {% set _ann = get_setting('announcement_text') %}
+  {% if get_setting('announcement_active') == '1' and _ann %}
+  <div class="announcement-bar">{{ _ann }}</div>
+  {% endif %}
   <div class="header-inner">
     <a href="{{ url_for('index') }}" class="logo">
       <img src="{{ url_for('static', filename='uploads/logo.png') }}?v={{ cache_bust }}" alt="Bohubrihi" class="logo-img"
@@ -91,10 +95,10 @@
       <div>
         <h4>Help</h4>
         <ul>
-          <li><a href="#">Shipping Info</a></li>
-          <li><a href="#">Returns</a></li>
-          <li><a href="#">Contact Us</a></li>
-          <li><a href="#">FAQ</a></li>
+          <li><a href="{{ url_for('shipping') }}">Shipping Info</a></li>
+          <li><a href="{{ url_for('returns') }}">Returns</a></li>
+          <li><a href="{{ url_for('faq') }}">FAQ</a></li>
+          <li><a href="{{ url_for('blog_index') }}">Blog</a></li>
         </ul>
       </div>
     </div>

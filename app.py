@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, make_response
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, make_response, g
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 from datetime import datetime
@@ -355,9 +355,16 @@ PAGE_SLUGS = [
 ]
 
 
+def get_all_settings():
+    if 'site_settings' not in g:
+        rows = SiteSetting.query.all()
+        g.site_settings = {s.key: s.value for s in rows}
+    return g.site_settings
+
+
+@app.template_global()
 def get_setting(key, default=''):
-    s = SiteSetting.query.get(key)
-    return s.value if s else default
+    return get_all_settings().get(key, default)
 
 
 def set_setting(key, value):
@@ -432,11 +439,19 @@ def seed_data():
 
 @app.route('/')
 def index():
-    categories = Category.query.order_by(Category.sort_order).all()
-    featured = Product.query.filter_by(featured=True, in_stock=True).limit(8).all()
+    categories      = Category.query.order_by(Category.sort_order).all()
+    featured        = Product.query.filter_by(featured=True, in_stock=True).limit(8).all()
     featured_bundles = Bundle.query.filter_by(featured=True, in_stock=True).all()
-    return render_template('store/index.html', categories=categories, featured=featured,
-                           featured_bundles=featured_bundles)
+    testimonials    = Testimonial.query.filter_by(active=True).order_by(Testimonial.created_at.desc()).all()
+    ba_items        = BeforeAfter.query.filter_by(active=True).order_by(BeforeAfter.created_at.desc()).all()
+    blog_previews   = BlogPost.query.filter_by(published=True).order_by(BlogPost.created_at.desc()).limit(3).all()
+    return render_template('store/index.html',
+                           categories=categories,
+                           featured=featured,
+                           featured_bundles=featured_bundles,
+                           testimonials=testimonials,
+                           ba_items=ba_items,
+                           blog_previews=blog_previews)
 
 
 @app.route('/shop')
@@ -559,7 +574,38 @@ def checkout():
 
 @app.route('/about')
 def about():
-    return render_template('store/about.html')
+    page = Page.query.get('about')
+    return render_template('store/page.html', page=page)
+
+
+@app.route('/faq')
+def faq():
+    page = Page.query.get('faq')
+    return render_template('store/page.html', page=page)
+
+
+@app.route('/shipping')
+def shipping():
+    page = Page.query.get('shipping')
+    return render_template('store/page.html', page=page)
+
+
+@app.route('/returns')
+def returns():
+    page = Page.query.get('returns')
+    return render_template('store/page.html', page=page)
+
+
+@app.route('/blog')
+def blog_index():
+    posts = BlogPost.query.filter_by(published=True).order_by(BlogPost.created_at.desc()).all()
+    return render_template('store/blog.html', posts=posts)
+
+
+@app.route('/blog/<slug>')
+def blog_post(slug):
+    post = BlogPost.query.filter_by(slug=slug, published=True).first_or_404()
+    return render_template('store/blog_post.html', post=post)
 
 
 @app.route('/sitemap.xml')

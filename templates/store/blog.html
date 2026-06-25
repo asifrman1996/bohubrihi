@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Blog – Bohubrihi Organic Skincare{% endblock %}
+
+{% block content %}
+<div class="blog-page-hero">
+  <div class="container">
+    <h1>Our Blog</h1>
+    <p>Skincare tips, ingredient guides, and natural beauty inspiration.</p>
+  </div>
+</div>
+
+<div class="blog-page">
+  <div class="container">
+    {% if posts %}
+    <div class="blog-grid">
+      {% for post in posts %}
+      <a href="{{ url_for('blog_post', slug=post.slug) }}" class="blog-card">
+        <div class="blog-card-img">
+          {% if post.cover_image %}
+          <img src="{{ image_url(post.cover_image) }}" alt="{{ post.title }}">
+          {% else %}
+          <div class="blog-card-img-placeholder">📝</div>
+          {% endif %}
+        </div>
+        <div class="blog-card-body">
+          <div class="blog-card-date">{{ post.created_at.strftime('%d %b %Y') }}</div>
+          <h3 class="blog-card-title">{{ post.title }}</h3>
+          <span class="blog-card-link">Read More →</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center; padding:80px 20px; color:var(--muted);">
+      <div style="font-size:3rem; margin-bottom:16px;">📝</div>
+      <p style="font-size:1.1rem; font-weight:600; color:var(--navy); margin-bottom:8px;">No posts yet</p>
+      <p>Check back soon for skincare tips and ingredient guides.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

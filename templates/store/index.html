@@ -2,19 +2,47 @@
 {% block title %}Bohubrihi – Natural Organic Skincare Bangladesh{% endblock %}
 
 {% block content %}
-<!-- Hero -->
+
+<!-- ── Hero ─────────────────────────────────────────────────────── -->
 <section class="hero">
+  {% set _hero_img = get_setting('hero_image_url') %}
+  <div class="hero-bg"{% if _hero_img %} style="background-image:url('{{ image_url(_hero_img) }}')"{% endif %}></div>
+  <div class="hero-overlay"></div>
   <div class="hero-content">
-    <h1>Pure Nature,<br><span>Beautiful Skin</span></h1>
-    <p>Handcrafted organic skincare made with the finest natural ingredients. No chemicals, no compromises.</p>
+    <h1>{{ get_setting('hero_headline') or 'Pure Nature,<br>Beautiful Skin' | safe }}</h1>
+    <p>{{ get_setting('hero_subheadline') or 'Handcrafted organic skincare made with the finest natural ingredients. No chemicals, no compromises.' }}</p>
     <div class="hero-btns">
-      <a href="{{ url_for('shop') }}" class="btn btn-primary">Shop Now</a>
+      <a href="{{ get_setting('hero_button_link') or url_for('shop') }}" class="btn btn-primary">
+        {{ get_setting('hero_button_text') or 'Shop Now' }}
+      </a>
       <a href="#featured" class="btn btn-outline">View Featured</a>
     </div>
   </div>
 </section>
 
-<!-- Categories -->
+<!-- ── Trust Badges ──────────────────────────────────────────────── -->
+<section class="trust-section">
+  <div class="container">
+    <div class="trust-grid">
+      {% for icon, title, desc in [
+        ('🌱', '100% Organic',      'Certified organic and sustainably sourced ingredients.'),
+        ('🧪', 'No Chemicals',      'Free from parabens, sulfates, and artificial fragrances.'),
+        ('🇧🇩', 'Made in Bangladesh','Proudly crafted locally with traditional recipes.'),
+        ('💚', 'Cruelty Free',      'Never tested on animals. Always ethical and kind.'),
+      ] %}
+      <div class="trust-item">
+        <span class="trust-icon">{{ icon }}</span>
+        <div class="trust-text">
+          <h4>{{ title }}</h4>
+          <p>{{ desc }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── Categories Bar ────────────────────────────────────────────── -->
 <section class="categories-section">
   <div class="categories-scroll">
     <a href="{{ url_for('shop') }}" class="cat-chip active">All Products</a>
@@ -25,7 +53,7 @@
 </section>
 
 {% if featured_bundles %}
-<!-- Bundle Deals — shown first per brand priority -->
+<!-- ── Bundle Deals ───────────────────────────────────────────────── -->
 <section class="bundle-deals-section">
   <div class="container">
     <div class="section-header">
@@ -58,9 +86,7 @@
               <span class="price">{{ b.price|int }}</span>
               {% if b.original_price > b.price %}<span class="original-price">{{ b.original_price|int }}</span>{% endif %}
             </div>
-            <button class="add-cart-btn" onclick="addToCart({{ b.id }}, '{{ b.name|replace("'", "\\'") }}', {{ b.price }}, '{{ b.image }}', 'Bundle', 'bundle')">
-              + Add
-            </button>
+            <button class="add-cart-btn" onclick="addToCart({{ b.id }}, '{{ b.name|replace("'", "\\'") }}', {{ b.price }}, '{{ b.image }}', 'Bundle', 'bundle')">+ Add</button>
           </div>
         </div>
       </div>
@@ -70,7 +96,7 @@
 </section>
 {% endif %}
 
-<!-- Featured Products -->
+<!-- ── Featured Products ──────────────────────────────────────────── -->
 <section class="section" id="featured">
   <div class="container">
     <div class="section-header">
@@ -91,9 +117,7 @@
               </svg>
             </div>
           {% endif %}
-          {% if p.original_price %}
-            <span class="badge-sale">SALE</span>
-          {% endif %}
+          {% if p.original_price %}<span class="badge-sale">SALE</span>{% endif %}
           <span class="badge-feat">Featured</span>
         </a>
         <div class="product-info">
@@ -104,13 +128,9 @@
           <div class="product-footer">
             <div class="price-wrap">
               <span class="price">{{ p.price|int }}</span>
-              {% if p.original_price %}
-                <span class="original-price">{{ p.original_price|int }}</span>
-              {% endif %}
+              {% if p.original_price %}<span class="original-price">{{ p.original_price|int }}</span>{% endif %}
             </div>
-            <button class="add-cart-btn" onclick="addToCart({{ p.id }}, '{{ p.name|replace("'", "\\'") }}', {{ p.price }}, '{{ p.image }}', '{{ p.category.name }}')">
-              + Add
-            </button>
+            <button class="add-cart-btn" onclick="addToCart({{ p.id }}, '{{ p.name|replace("'", "\\'") }}', {{ p.price }}, '{{ p.image }}', '{{ p.category.name }}')">+ Add</button>
           </div>
         </div>
       </div>
@@ -119,26 +139,101 @@
   </div>
 </section>
 
-<!-- Why Bohubrihi -->
-<section style="background: linear-gradient(135deg, #FDF0F3, #FDF6F0); padding: 60px 0;">
+{% if testimonials %}
+<!-- ── Testimonials ───────────────────────────────────────────────── -->
+<section class="testimonials-section">
   <div class="container">
-    <div style="text-align:center; margin-bottom:40px;">
-      <h2 class="section-title">Why Choose <span>Bohubrihi</span>?</h2>
+    <div class="section-header">
+      <h2 class="section-title">What Our <span>Customers</span> Say</h2>
     </div>
-    <div class="why-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:24px;">
-      {% for item in [
-        ('🌱','100% Organic','All ingredients are certified organic and sustainably sourced.'),
-        ('🧪','No Chemicals','Free from parabens, sulfates, and artificial fragrances.'),
-        ('🇧🇩','Made in Bangladesh','Proudly crafted locally with traditional recipes.'),
-        ('💚','Cruelty Free','Never tested on animals. Always ethical and kind.'),
-      ] %}
-      <div class="why-card" style="background:#fff; border-radius:16px; padding:28px 20px; text-align:center; box-shadow:var(--shadow);">
-        <div style="font-size:2.5rem; margin-bottom:12px;">{{ item[0] }}</div>
-        <h3 style="color:var(--navy); margin-bottom:8px; font-size:1rem;">{{ item[1] }}</h3>
-        <p style="color:var(--muted); font-size:.85rem; line-height:1.6;">{{ item[2] }}</p>
+    <div class="testimonials-grid">
+      {% for t in testimonials %}
+      <div class="testimonial-card">
+        <div class="testimonial-stars">
+          {% for i in range(t.star_rating) %}★{% endfor %}{% for i in range(5 - t.star_rating) %}<span style="opacity:.3;">★</span>{% endfor %}
+        </div>
+        <p class="testimonial-text">"{{ t.review_text }}"</p>
+        <div class="testimonial-author">
+          {% if t.customer_photo %}
+          <img class="testimonial-photo" src="{{ image_url(t.customer_photo) }}" alt="{{ t.customer_name }}">
+          {% else %}
+          <div class="testimonial-photo testimonial-photo-placeholder">{{ t.customer_name[0].upper() }}</div>
+          {% endif %}
+          <span class="testimonial-name">{{ t.customer_name }}</span>
+        </div>
       </div>
       {% endfor %}
     </div>
   </div>
 </section>
+{% endif %}
+
+{% if ba_items %}
+<!-- ── Before & After ─────────────────────────────────────────────── -->
+<section class="ba-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Real <span>Results</span></h2>
+    </div>
+    <div class="ba-grid">
+      {% for ba in ba_items %}
+      <div class="ba-card">
+        <div class="ba-images">
+          <div class="ba-img-wrap">
+            {% if ba.before_image %}
+            <img src="{{ image_url(ba.before_image) }}" alt="Before">
+            {% else %}
+            <div class="ba-img-placeholder">Before</div>
+            {% endif %}
+            <span class="ba-label">Before</span>
+          </div>
+          <div class="ba-img-wrap">
+            {% if ba.after_image %}
+            <img src="{{ image_url(ba.after_image) }}" alt="After">
+            {% else %}
+            <div class="ba-img-placeholder">After</div>
+            {% endif %}
+            <span class="ba-label ba-label-after">After</span>
+          </div>
+        </div>
+        {% if ba.caption %}
+        <p class="ba-caption">{{ ba.caption }}</p>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if blog_previews %}
+<!-- ── Blog Preview ───────────────────────────────────────────────── -->
+<section class="blog-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">From Our <span>Blog</span></h2>
+      <a href="{{ url_for('blog_index') }}" class="see-all">All posts →</a>
+    </div>
+    <div class="blog-grid">
+      {% for post in blog_previews %}
+      <a href="{{ url_for('blog_post', slug=post.slug) }}" class="blog-card">
+        <div class="blog-card-img">
+          {% if post.cover_image %}
+          <img src="{{ image_url(post.cover_image) }}" alt="{{ post.title }}">
+          {% else %}
+          <div class="blog-card-img-placeholder">📝</div>
+          {% endif %}
+        </div>
+        <div class="blog-card-body">
+          <div class="blog-card-date">{{ post.created_at.strftime('%d %b %Y') }}</div>
+          <h3 class="blog-card-title">{{ post.title }}</h3>
+          <span class="blog-card-link">Read More →</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
 {% endblock %}
