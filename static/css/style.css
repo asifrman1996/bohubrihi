@@ -482,55 +482,58 @@ button { cursor: pointer; border: none; }
 .mobile-nav-subcats a:hover { background: var(--teal-dim); color: var(--teal); }
 
 /* ── Hero ────────────────────────────────────────────────────── */
-.hero { background: var(--bg); overflow: hidden; }
-.hero-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  min-height: 500px;
+.hero {
+  position: relative;
+  height: 520px;
+  background-color: var(--navy);
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
   display: flex;
-  align-items: stretch;
+  align-items: center;
 }
-.hero-text {
-  flex: 0 0 50%;
-  max-width: 50%;
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(60,13,30,.82) 0%, rgba(60,13,30,.58) 42%, transparent 68%);
+}
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+.hero-content {
+  max-width: 520px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 64px 56px 64px 20px;
+  align-items: flex-start;
 }
 .hero-eyebrow {
   font-size: .75rem;
   font-weight: 700;
   letter-spacing: .11em;
   text-transform: uppercase;
-  color: var(--teal);
+  color: rgba(255,255,255,.75);
   margin-bottom: 18px;
 }
 .hero-headline {
   font-size: 3rem;
   font-weight: 900;
   line-height: 1.15;
-  color: var(--navy);
+  color: #fff;
   margin-bottom: 18px;
 }
-.hero-headline span { color: var(--teal); }
+.hero-headline span { color: var(--lime); }
 .hero-sub {
   font-size: 1.05rem;
-  color: #555;
+  color: rgba(255,255,255,.85);
   line-height: 1.75;
   margin-bottom: 36px;
 }
 .hero-cta { align-self: flex-start; }
-.hero-img-col {
-  flex: 0 0 50%;
-  max-width: 50%;
-  overflow: hidden;
-}
-.hero-product-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.hero-img-empty {
-  width: 100%; height: 100%;
-  background: linear-gradient(135deg, var(--teal-dim), rgba(201,168,64,.12));
-}
 .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; border-radius: 10px; font-weight: 600; font-size: 1rem; transition: all .2s; }
 .btn-primary { background: var(--teal); color: #fff; }
 .btn-primary:hover { background: var(--teal-dark); transform: translateY(-2px); box-shadow: var(--shadow); }
@@ -1105,13 +1108,14 @@ tbody tr:hover { background: #FFF7F9; }
   .concern-grid        { grid-template-columns: repeat(3, 200px); overflow-x: auto; }
   .footer-bottom       { flex-direction: column; gap: 8px; text-align: center; }
 
-  /* Hero: stack image-top, text-below on tablet/mobile */
-  .hero-inner   { flex-direction: column-reverse; min-height: unset; }
-  .hero-text    { flex: none; max-width: 100%; padding: 40px 20px 48px; background: #fff; }
+  /* Hero: full-overlay centered text on tablet/mobile */
+  .hero { height: 380px; }
+  .hero-overlay { background: rgba(60,13,30,.62); }
+  .hero-inner { padding: 0 20px; display: flex; justify-content: center; }
+  .hero-content { max-width: 100%; align-items: center; text-align: center; }
   .hero-headline { font-size: 2.2rem; }
   .hero-sub     { font-size: 1rem; }
-  .hero-cta     { align-self: stretch; justify-content: center; }
-  .hero-img-col { flex: none; max-width: 100%; width: 100%; height: 320px; }
+  .hero-cta     { align-self: center; }
 
   /* Hide desktop nav, show hamburger */
   .header-nav { display: none; }
@@ -1129,8 +1133,6 @@ tbody tr:hover { background: #FFF7F9; }
   .header-search button { display: none; }
 
   .hero-headline { font-size: 1.9rem; }
-  .hero-text    { padding: 28px 16px 36px; }
-  .hero-img-col { height: 260px; }
 
   .container    { padding: 0 12px; }
 
@@ -1546,6 +1548,32 @@ tbody tr:hover { background: #FFF7F9; }
   transition: color .15s;
 }
 .pd-share-btn:hover { color: var(--teal); }
+
+/* ── Variant Pill Selector ───────────────────────────────── */
+.variant-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 4px;
+}
+.variant-pill {
+  padding: 8px 18px;
+  border: 2px solid var(--border);
+  border-radius: 100px;
+  background: #fff;
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--navy);
+  cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+  font-family: inherit;
+}
+.variant-pill:hover { border-color: var(--teal); color: var(--teal); }
+.variant-pill.active {
+  border-color: var(--teal);
+  background: var(--teal);
+  color: #fff;
+}
 
 /* Trust strip — text only, minimal */
 .pd-trust-strip {

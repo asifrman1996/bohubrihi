@@ -84,6 +84,9 @@ class Product(db.Model):
     reviews = db.relationship('Review', backref='product', lazy=True)
     linked_ingredients = db.relationship('Ingredient', secondary=product_ingredients,
                                          lazy='subquery', backref=db.backref('products', lazy=True))
+    variants = db.relationship('ProductVariant', lazy=True,
+                               order_by='ProductVariant.sort_order',
+                               cascade='all, delete-orphan')
 
 
 class Review(db.Model):
@@ -204,6 +207,17 @@ class ProductFAQ(db.Model):
     question   = db.Column(db.String(400), nullable=False)
     answer     = db.Column(db.Text, nullable=False)
     sort_order = db.Column(db.Integer, default=0)
+
+
+class ProductVariant(db.Model):
+    __tablename__ = 'product_variants'
+    id             = db.Column(db.Integer, primary_key=True)
+    product_id     = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    label          = db.Column(db.String(100), nullable=False)
+    price          = db.Column(db.Float, nullable=False)
+    original_price = db.Column(db.Float, nullable=True)
+    in_stock       = db.Column(db.Boolean, default=True)
+    sort_order     = db.Column(db.Integer, default=0)
 
 
 SLACK_BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN', '')
@@ -471,43 +485,13 @@ def seed_data():
 
 @app.route('/')
 def index():
-    categories       = Category.query.order_by(Category.sort_order).all()
     featured         = Product.query.filter_by(featured=True, in_stock=True).limit(8).all()
     featured_bundles = Bundle.query.filter_by(featured=True, in_stock=True).all()
     testimonials     = Testimonial.query.filter_by(active=True).order_by(Testimonial.created_at.desc()).all()
-    ba_items         = BeforeAfter.query.filter_by(active=True).order_by(BeforeAfter.created_at.desc()).all()
-    blog_previews    = BlogPost.query.filter_by(published=True).order_by(BlogPost.created_at.desc()).limit(3).all()
-
-    # Shop by Concern: first in-stock product image per concern category
-    concern_data = []
-    for slug, label, tagline in [
-        ('face-care', 'উজ্জ্বল ত্বক', 'ফেস কেয়ার কালেকশন'),
-        ('hair-care', 'চুলের যত্ন', 'হেয়ার কেয়ার কালেকশন'),
-        ('body-care', 'বডি কেয়ার', 'বডি কেয়ার কালেকশন'),
-    ]:
-        cat = next((c for c in categories if c.slug == slug), None)
-        img = ''
-        if cat:
-            p = Product.query.filter_by(category_id=cat.id, in_stock=True).filter(Product.image != '').first()
-            img = p.image if p else ''
-        concern_data.append({'slug': slug, 'label': label, 'tagline': tagline, 'image': img})
-
-    # Products by Category: up to 6 in-stock products per category
-    category_rows = []
-    for cat in categories:
-        prods = Product.query.filter_by(category_id=cat.id, in_stock=True).limit(6).all()
-        if prods:
-            category_rows.append((cat, prods))
-
     return render_template('store/index.html',
-                           categories=categories,
                            featured=featured,
                            featured_bundles=featured_bundles,
-                           testimonials=testimonials,
-                           ba_items=ba_items,
-                           blog_previews=blog_previews,
-                           concern_data=concern_data,
-                           category_rows=category_rows)
+                           testimonials=testimonials)
 
 
 @app.route('/shop')
@@ -533,14 +517,15 @@ def shop():
 @app.route('/product/<int:pid>')
 def product_detail(pid):
     product = Product.query.get_or_404(pid)
+    variants = ProductVariant.query.filter_by(product_id=pid).order_by(ProductVariant.sort_order).all()
     related = Product.query.filter_by(category_id=product.category_id, in_stock=True)\
                            .filter(Product.id != pid).limit(4).all()
     reviews = Review.query.filter_by(product_id=pid, approved=True)\
                           .order_by(Review.created_at.desc()).all()
     avg_rating = round(sum(r.rating for r in reviews) / len(reviews), 1) if reviews else None
     faqs = ProductFAQ.query.filter_by(product_id=pid).order_by(ProductFAQ.sort_order).all()
-    return render_template('store/product.html', product=product, related=related,
-                           reviews=reviews, avg_rating=avg_rating, faqs=faqs)
+    return render_template('store/product.html', product=product, variants=variants,
+                           related=related, reviews=reviews, avg_rating=avg_rating, faqs=faqs)
 
 
 @app.route('/bundle/<int:bid>')
@@ -1449,6 +1434,37 @@ def admin_delete_product_faq(pid, fid):
     db.session.delete(faq)
     db.session.commit()
     flash('FAQ deleted.', 'success')
+    return redirect(url_for('admin_edit_product', pid=pid))
+
+
+@app.route('/admin/products/<int:pid>/variants/add', methods=['POST'])
+@admin_required
+def admin_add_product_variant(pid):
+    Product.query.get_or_404(pid)
+    label = request.form.get('label', '').strip()
+    try:
+        price = float(request.form.get('price', 0))
+    except (ValueError, TypeError):
+        price = 0.0
+    orig_raw = request.form.get('original_price', '').strip()
+    original_price = float(orig_raw) if orig_raw else None
+    in_stock = bool(request.form.get('in_stock'))
+    count = ProductVariant.query.filter_by(product_id=pid).count()
+    v = ProductVariant(product_id=pid, label=label, price=price,
+                       original_price=original_price, in_stock=in_stock, sort_order=count)
+    db.session.add(v)
+    db.session.commit()
+    flash('Variant added.', 'success')
+    return redirect(url_for('admin_edit_product', pid=pid))
+
+
+@app.route('/admin/products/<int:pid>/variants/<int:vid>/delete', methods=['POST'])
+@admin_required
+def admin_delete_product_variant(pid, vid):
+    v = ProductVariant.query.filter_by(id=vid, product_id=pid).first_or_404()
+    db.session.delete(v)
+    db.session.commit()
+    flash('Variant deleted.', 'success')
     return redirect(url_for('admin_edit_product', pid=pid))
 
 

@@ -148,6 +148,68 @@
   </form>
 </div>
 
+<!-- ── Product Variants (edit mode only) ─────────────────────────── -->
+{% if product %}
+<div class="admin-form-card" style="margin-top:24px;">
+  <h3 style="font-size:.95rem; font-weight:800; color:var(--navy); margin-bottom:4px;">Product Variants</h3>
+  <p style="font-size:.82rem; color:var(--muted); margin-bottom:20px;">
+    Add size or quantity options (e.g. 50g, 100ml). When variants exist, the product page shows a size selector and cards show "From ৳X".
+  </p>
+
+  {% set variants = product.variants %}
+  {% if variants %}
+  <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+    {% for v in variants %}
+    <div style="display:flex; align-items:center; gap:12px; padding:14px 16px; background:#f8fafc; border-radius:10px; border:1.5px solid var(--border);">
+      <div style="flex:1; min-width:0;">
+        <p style="font-size:.9rem; font-weight:700; color:var(--navy); margin:0 0 2px;">{{ v.label }}</p>
+        <p style="font-size:.82rem; color:var(--muted); margin:0;">
+          ৳{{ v.price|int }}
+          {% if v.original_price %} · <s>৳{{ v.original_price|int }}</s>{% endif %}
+          · {% if v.in_stock %}<span style="color:#16a34a;">In Stock</span>{% else %}<span style="color:#dc2626;">Out of Stock</span>{% endif %}
+        </p>
+      </div>
+      <form method="POST" action="{{ url_for('admin_delete_product_variant', pid=product.id, vid=v.id) }}"
+            onsubmit="return confirm('Delete this variant?')" style="flex-shrink:0;">
+        <button type="submit" class="btn-sm btn-red">Delete</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div style="background:#f0fdfa; border-radius:12px; padding:18px; border:1.5px solid #99f6e4;">
+    <h4 style="font-size:.82rem; font-weight:700; color:var(--navy); margin:0 0 14px;">Add New Variant</h4>
+    <form method="POST" action="{{ url_for('admin_add_product_variant', pid=product.id) }}">
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px;">
+        <div>
+          <label style="display:block; font-size:.78rem; font-weight:600; color:var(--navy); margin-bottom:5px;">Label *</label>
+          <input type="text" name="label" required placeholder="e.g. 50g, 100ml"
+                 style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:.88rem; font-family:inherit; box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="display:block; font-size:.78rem; font-weight:600; color:var(--navy); margin-bottom:5px;">Price (BDT) *</label>
+          <input type="number" name="price" required min="0" step="0.01" placeholder="e.g. 250"
+                 style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:.88rem; font-family:inherit; box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="display:block; font-size:.78rem; font-weight:600; color:var(--navy); margin-bottom:5px;">Original Price</label>
+          <input type="number" name="original_price" min="0" step="0.01" placeholder="Leave blank if no discount"
+                 style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:.88rem; font-family:inherit; box-sizing:border-box;">
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:20px;">
+        <label style="display:flex; align-items:center; gap:7px; font-size:.85rem; font-weight:600; color:var(--navy); cursor:pointer;">
+          <input type="checkbox" name="in_stock" value="1" checked style="accent-color:var(--teal); width:15px; height:15px;">
+          In Stock
+        </label>
+        <button type="submit" class="btn btn-teal" style="padding:9px 20px; font-size:.88rem;">+ Add Variant</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
 <!-- ── Product FAQs (edit mode only) ─────────────────────────────── -->
 {% if product %}
 <div class="admin-form-card" style="margin-top:24px;">

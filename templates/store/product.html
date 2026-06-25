@@ -62,7 +62,34 @@
         </div>
         {% endif %}
 
+        <!-- Variant selector -->
+        {% if variants %}
+        <div class="variant-selector">
+          {% for v in variants %}
+          <button type="button"
+                  class="variant-pill{% if loop.first %} active{% endif %}"
+                  data-price="{{ v.price }}"
+                  data-orig="{{ v.original_price or '' }}"
+                  data-in-stock="{{ 'true' if v.in_stock else 'false' }}"
+                  onclick="selectVariant(this)">{{ v.label }}</button>
+          {% endfor %}
+        </div>
+        {% endif %}
+
         <!-- Price -->
+        {% if variants %}
+          {% set fv = variants[0] %}
+        <div class="pd-price-row">
+          <span class="pd-price" id="pdPriceDisplay">৳{{ fv.price|int }}</span>
+          {% if fv.original_price %}
+          <span class="pd-orig-price" id="pdOrigPrice">৳{{ fv.original_price|int }}</span>
+          <span class="pd-savings" id="pdSavings">Save ৳{{ (fv.original_price - fv.price)|int }}</span>
+          {% else %}
+          <span class="pd-orig-price" id="pdOrigPrice" style="display:none"></span>
+          <span class="pd-savings" id="pdSavings" style="display:none"></span>
+          {% endif %}
+        </div>
+        {% else %}
         <div class="pd-price-row">
           <span class="pd-price">৳{{ product.price|int }}</span>
           {% if product.original_price %}
@@ -70,6 +97,7 @@
           <span class="pd-savings">Save ৳{{ (product.original_price - product.price)|int }}</span>
           {% endif %}
         </div>
+        {% endif %}
 
         <!-- Short description -->
         {% if product.short_description %}
@@ -83,10 +111,21 @@
           <select class="pd-qty-select" id="pdQtySelect">
             {% for i in range(1, 11) %}<option value="{{ i }}">{{ i }}</option>{% endfor %}
           </select>
+          {% if variants %}
+          <button class="pd-add-btn" onclick="
+            const qty = parseInt(document.getElementById('pdQtySelect').value);
+            const pill = document.querySelector('.variant-pill.active');
+            const label = pill ? pill.textContent.trim() : '';
+            const price = pill ? parseFloat(pill.dataset.price) : {{ product.price }};
+            const name = '{{ product.name|replace("'","\\'") }}' + (label ? ' – ' + label : '');
+            for(let i=0;i<qty;i++) addToCart({{ product.id }}, name, price, '{{ product.image }}', '{{ product.category.name }}');
+          ">&#x1F6D2; Add to Cart</button>
+          {% else %}
           <button class="pd-add-btn" onclick="
             const qty = parseInt(document.getElementById('pdQtySelect').value);
             for(let i=0;i<qty;i++) addToCart({{ product.id }},'{{ product.name|replace("'","\\'") }}',{{ product.price }},'{{ product.image }}','{{ product.category.name }}');
-          ">🛒 Add to Cart</button>
+          ">&#x1F6D2; Add to Cart</button>
+          {% endif %}
         </div>
         <hr class="pd-divider">
         <div class="pd-specs">
@@ -318,6 +357,28 @@
     }
   }
 })();
+
+function selectVariant(btn) {
+  document.querySelectorAll('.variant-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  const price = parseFloat(btn.dataset.price);
+  const orig  = btn.dataset.orig ? parseFloat(btn.dataset.orig) : null;
+  const priceEl = document.getElementById('pdPriceDisplay');
+  const origEl  = document.getElementById('pdOrigPrice');
+  const saveEl  = document.getElementById('pdSavings');
+  if (priceEl) priceEl.textContent = '৳' + Math.round(price);
+  if (origEl && saveEl) {
+    if (orig) {
+      origEl.textContent = '৳' + Math.round(orig);
+      saveEl.textContent = 'Save ৳' + Math.round(orig - price);
+      origEl.style.display = '';
+      saveEl.style.display = '';
+    } else {
+      origEl.style.display = 'none';
+      saveEl.style.display = 'none';
+    }
+  }
+}
 
 function shareProduct() {
   const url   = window.location.href;

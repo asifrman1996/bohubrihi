@@ -103,12 +103,20 @@
         {% if p.short_description %}<div class="product-desc">{{ p.short_description }}</div>{% endif %}
         <div class="product-footer">
           <div class="price-wrap">
-            <span class="price">{{ p.price|int }}</span>
-            {% if p.original_price %}<span class="original-price">{{ p.original_price|int }}</span>{% endif %}
+            {% if p.variants %}
+              <span class="price">From ৳{{ p.variants|map(attribute='price')|min|int }}</span>
+            {% else %}
+              <span class="price">{{ p.price|int }}</span>
+              {% if p.original_price %}<span class="original-price">{{ p.original_price|int }}</span>{% endif %}
+            {% endif %}
           </div>
-          <button class="add-cart-btn" onclick="addToCart({{ p.id }}, '{{ p.name|replace("'", "\\'") }}', {{ p.price }}, '{{ p.image }}', '{{ p.category.name }}')">
-            + Add
-          </button>
+          {% if p.variants %}
+            <a href="{{ url_for('product_detail', pid=p.id) }}" class="add-cart-btn">Select</a>
+          {% else %}
+            <button class="add-cart-btn" onclick="addToCart({{ p.id }}, '{{ p.name|replace("'", "\\'") }}', {{ p.price }}, '{{ p.image }}', '{{ p.category.name }}')">
+              + Add
+            </button>
+          {% endif %}
         </div>
       </div>
     </div>
