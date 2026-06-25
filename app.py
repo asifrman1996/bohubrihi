@@ -57,6 +57,7 @@ product_ingredients = db.Table('product_ingredients',
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
+    short_description = db.Column(db.Text, default='')
     description = db.Column(db.Text, default='')
     price = db.Column(db.Float, nullable=False)
     original_price = db.Column(db.Float, nullable=True)
@@ -730,6 +731,7 @@ def admin_add_product():
         orig = request.form.get('original_price', '').strip()
         product = Product(
             name=request.form['name'],
+            short_description=request.form.get('short_description', ''),
             description=request.form.get('description', ''),
             price=float(request.form['price']),
             original_price=float(orig) if orig else None,
@@ -769,6 +771,7 @@ def admin_edit_product(pid):
                 product.image = new_image
         orig = request.form.get('original_price', '').strip()
         product.name = request.form['name']
+        product.short_description = request.form.get('short_description', '')
         product.description = request.form.get('description', '')
         product.price = float(request.form['price'])
         product.original_price = float(orig) if orig else None

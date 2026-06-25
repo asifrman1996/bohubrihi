@@ -72,7 +72,9 @@
         </div>
 
         <!-- Short description -->
-        <div class="pd-short-desc pd-rich-text">{{ product.description | safe }}</div>
+        {% if product.short_description %}
+        <div class="pd-short-desc">{{ product.short_description }}</div>
+        {% endif %}
 
         <!-- Add to cart -->
         {% if product.in_stock %}

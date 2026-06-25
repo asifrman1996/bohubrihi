@@ -124,7 +124,7 @@
           <div class="product-cat">{{ p.category.name }}</div>
           <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-name">{{ p.name }}</a>
           {% if p.weight %}<div class="product-weight">{{ p.weight }}</div>{% endif %}
-          <div class="product-desc">{{ p.description }}</div>
+          {% if p.short_description %}<div class="product-desc">{{ p.short_description }}</div>{% endif %}
           <div class="product-footer">
             <div class="price-wrap">
               <span class="price">{{ p.price|int }}</span>
