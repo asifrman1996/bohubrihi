@@ -1411,6 +1411,9 @@ def admin_delete_product_faq(pid, fid):
 
 with app.app_context():
     db.create_all()
+    with db.engine.connect() as conn:
+        conn.execute(db.text("ALTER TABLE product ADD COLUMN IF NOT EXISTS short_description TEXT;"))
+        conn.commit()
     seed_data()
     _seed_pages()
     _seed_product_faqs()
