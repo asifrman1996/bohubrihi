@@ -1,0 +1,109 @@
+{% extends 'admin/base.html' %}
+{% block title %}General Settings – Admin{% endblock %}
+{% block page_title %}General Settings{% endblock %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data">
+
+  <!-- Announcement Bar -->
+  <div class="admin-form-card" style="margin-bottom:24px; max-width:100%;">
+    <h3 style="font-size:.95rem; font-weight:700; color:var(--navy); margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--border);">
+      📢 Announcement Bar
+    </h3>
+    <div style="display:grid; grid-template-columns:1fr auto; gap:20px; align-items:end;">
+      <div class="form-group" style="margin-bottom:0;">
+        <label>Announcement Text</label>
+        <input type="text" name="announcement_text"
+               value="{{ settings.announcement_text }}"
+               placeholder="e.g. Free shipping on orders above ৳2500! Use code WELCOME10 for 10% off.">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label>Show Bar</label>
+        <label class="checkbox-label" style="margin-top:10px;">
+          <input type="checkbox" name="announcement_active" value="1"
+                 {% if settings.announcement_active == '1' %}checked{% endif %}>
+          Active
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero Section -->
+  <div class="admin-form-card" style="max-width:100%;">
+    <h3 style="font-size:.95rem; font-weight:700; color:var(--navy); margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--border);">
+      🖼️ Hero / Banner Section
+    </h3>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Headline</label>
+        <input type="text" name="hero_headline"
+               value="{{ settings.hero_headline }}"
+               placeholder="e.g. Pure Organic Skincare from Bangladesh">
+      </div>
+
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Sub-headline</label>
+        <input type="text" name="hero_subheadline"
+               value="{{ settings.hero_subheadline }}"
+               placeholder="e.g. Handcrafted with 100% natural ingredients, no harmful chemicals.">
+      </div>
+
+      <div class="form-group">
+        <label>Button Text</label>
+        <input type="text" name="hero_button_text"
+               value="{{ settings.hero_button_text }}"
+               placeholder="e.g. Shop Now">
+      </div>
+
+      <div class="form-group">
+        <label>Button Link</label>
+        <input type="text" name="hero_button_link"
+               value="{{ settings.hero_button_link }}"
+               placeholder="e.g. /shop">
+      </div>
+
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Hero Image</label>
+        {% if settings.hero_image_url %}
+        <div class="current-img-wrap">
+          <img src="{{ image_url(settings.hero_image_url) }}"
+               style="width:120px; height:70px; border-radius:8px; object-fit:cover;">
+          <span style="font-size:.85rem; color:var(--muted);">Current image — upload to replace or edit the URL below</span>
+        </div>
+        {% endif %}
+        <div style="display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; margin-bottom:8px;">
+          <input type="text" name="hero_image_url"
+                 value="{{ settings.hero_image_url }}"
+                 placeholder="Paste a Supabase or CDN image URL…">
+          <span style="color:var(--muted); font-size:.82rem; white-space:nowrap;">or upload:</span>
+        </div>
+        <input type="file" name="hero_image_file" accept="image/*" id="heroImgInput"
+               style="padding:10px; background:#f8fafc; border:2px dashed var(--border); border-radius:8px; width:100%;">
+        <div id="heroImgPreview" style="display:none; margin-top:10px; border-radius:8px; overflow:hidden; max-width:200px;">
+          <img id="heroPreviewImg" src="" alt="Preview">
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="margin-top:20px;">
+    <button type="submit" class="btn btn-teal">💾 Save Settings</button>
+  </div>
+</form>
+
+<script>
+document.getElementById('heroImgInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      document.getElementById('heroPreviewImg').src = ev.target.result;
+      document.getElementById('heroImgPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+});
+</script>
+{% endblock %}

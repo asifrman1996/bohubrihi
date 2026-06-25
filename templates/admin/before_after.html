@@ -1,0 +1,79 @@
+{% extends 'admin/base.html' %}
+{% block title %}Before & After – Admin{% endblock %}
+{% block page_title %}Before & After{% endblock %}
+
+{% block content %}
+<div class="admin-table-wrap">
+  <div class="admin-table-header">
+    <h3>{{ items|length }} Entr{{ 'ies' if items|length != 1 else 'y' }}</h3>
+    <a href="{{ url_for('admin_add_before_after') }}" class="btn-sm btn-teal">+ Add Entry</a>
+  </div>
+
+  {% if items %}
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Before</th>
+          <th>After</th>
+          <th>Caption</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ba in items %}
+        <tr>
+          <td>
+            <div class="td-img">
+              {% if ba.before_image %}
+              <img src="{{ image_url(ba.before_image) }}" alt="Before">
+              {% else %}
+              🖼️
+              {% endif %}
+            </div>
+          </td>
+          <td>
+            <div class="td-img">
+              {% if ba.after_image %}
+              <img src="{{ image_url(ba.after_image) }}" alt="After">
+              {% else %}
+              🖼️
+              {% endif %}
+            </div>
+          </td>
+          <td style="color:var(--muted); font-size:.85rem;">
+            {{ ba.caption[:60] }}{% if ba.caption|length > 60 %}…{% endif %}
+          </td>
+          <td>
+            {% if ba.active %}
+            <span class="badge badge-green">Active</span>
+            {% else %}
+            <span class="badge badge-red">Hidden</span>
+            {% endif %}
+          </td>
+          <td style="color:var(--muted); font-size:.82rem;">{{ ba.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <a href="{{ url_for('admin_edit_before_after', bid=ba.id) }}" class="btn-sm btn-ghost">Edit</a>
+              <form method="POST" action="{{ url_for('admin_delete_before_after', bid=ba.id) }}"
+                    onsubmit="return confirm('Delete this entry?')">
+                <button type="submit" class="btn-sm btn-red">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="padding:48px; text-align:center; color:var(--muted);">
+    <div style="font-size:2.5rem; margin-bottom:12px;">🖼️</div>
+    <p style="font-weight:600; margin-bottom:4px;">No entries yet</p>
+    <p style="font-size:.85rem;">Add before & after photos to showcase your product results.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

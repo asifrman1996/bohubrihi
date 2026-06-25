@@ -1,0 +1,91 @@
+{% extends 'admin/base.html' %}
+{% block title %}{{ 'Edit' if item else 'Add' }} Before & After – Admin{% endblock %}
+{% block page_title %}{{ '✏️ Edit Entry' if item else '➕ Add Before & After' }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:16px;">
+  <a href="{{ url_for('admin_before_after') }}" style="color:var(--teal); font-size:.9rem;">← Back to Before & After</a>
+</div>
+
+<div class="admin-form-card">
+  <form method="POST" enctype="multipart/form-data">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+
+      <!-- Before Image -->
+      <div class="form-group">
+        <label>Before Image</label>
+        {% if item and item.before_image %}
+        <div class="current-img-wrap">
+          <img src="{{ image_url(item.before_image) }}"
+               style="width:80px; height:80px; border-radius:8px; object-fit:cover;">
+          <span style="font-size:.82rem; color:var(--muted);">Upload to replace</span>
+        </div>
+        {% endif %}
+        <input type="file" name="before_image" accept="image/*" id="beforeInput"
+               style="padding:10px; background:#f8fafc; border:2px dashed var(--border); border-radius:8px; width:100%;">
+        <div id="beforePreview" style="display:none; margin-top:8px; border-radius:8px; overflow:hidden;">
+          <img id="beforeImg" src="" style="width:100%; max-height:140px; object-fit:cover;">
+        </div>
+      </div>
+
+      <!-- After Image -->
+      <div class="form-group">
+        <label>After Image</label>
+        {% if item and item.after_image %}
+        <div class="current-img-wrap">
+          <img src="{{ image_url(item.after_image) }}"
+               style="width:80px; height:80px; border-radius:8px; object-fit:cover;">
+          <span style="font-size:.82rem; color:var(--muted);">Upload to replace</span>
+        </div>
+        {% endif %}
+        <input type="file" name="after_image" accept="image/*" id="afterInput"
+               style="padding:10px; background:#f8fafc; border:2px dashed var(--border); border-radius:8px; width:100%;">
+        <div id="afterPreview" style="display:none; margin-top:8px; border-radius:8px; overflow:hidden;">
+          <img id="afterImg" src="" style="width:100%; max-height:140px; object-fit:cover;">
+        </div>
+      </div>
+
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Caption</label>
+        <input type="text" name="caption"
+               value="{{ item.caption if item else '' }}"
+               placeholder="e.g. Results after 4 weeks of using our Neem Soap">
+      </div>
+
+      <div class="form-group" style="grid-column:1/-1;">
+        <label class="checkbox-label">
+          <input type="checkbox" name="active" value="1"
+                 {% if not item or item.active %}checked{% endif %}>
+          Show on storefront
+        </label>
+      </div>
+
+    </div>
+
+    <div style="display:flex; gap:12px; margin-top:8px;">
+      <button type="submit" class="btn btn-teal">
+        {{ '💾 Save Changes' if item else '➕ Add Entry' }}
+      </button>
+      <a href="{{ url_for('admin_before_after') }}" class="btn" style="background:#e2e8f0; color:var(--navy);">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+function previewImage(inputId, imgId, wrapId) {
+  document.getElementById(inputId).addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        document.getElementById(imgId).src = ev.target.result;
+        document.getElementById(wrapId).style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+previewImage('beforeInput', 'beforeImg', 'beforePreview');
+previewImage('afterInput',  'afterImg',  'afterPreview');
+</script>
+{% endblock %}

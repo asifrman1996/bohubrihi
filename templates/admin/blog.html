@@ -1,0 +1,70 @@
+{% extends 'admin/base.html' %}
+{% block title %}Blog – Admin{% endblock %}
+{% block page_title %}Blog Posts{% endblock %}
+
+{% block content %}
+<div class="admin-table-wrap">
+  <div class="admin-table-header">
+    <h3>{{ posts|length }} Post{{ 's' if posts|length != 1 else '' }}</h3>
+    <a href="{{ url_for('admin_add_blog_post') }}" class="btn-sm btn-teal">+ New Post</a>
+  </div>
+
+  {% if posts %}
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Cover</th>
+          <th>Title</th>
+          <th>Slug</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for post in posts %}
+        <tr>
+          <td>
+            <div class="td-img">
+              {% if post.cover_image %}
+              <img src="{{ image_url(post.cover_image) }}" alt="{{ post.title }}">
+              {% else %}
+              📝
+              {% endif %}
+            </div>
+          </td>
+          <td style="font-weight:600; max-width:220px;">{{ post.title }}</td>
+          <td style="font-size:.78rem; color:var(--muted); font-family:monospace;">/blog/{{ post.slug }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('admin_toggle_blog_post', post_id=post.id) }}" style="display:inline;">
+              <button type="submit" class="btn-sm {{ 'btn-teal' if post.published else 'btn-ghost' }}"
+                      style="font-size:.75rem; padding:4px 10px;">
+                {{ '✓ Published' if post.published else '○ Draft' }}
+              </button>
+            </form>
+          </td>
+          <td style="color:var(--muted); font-size:.82rem;">{{ post.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <a href="{{ url_for('admin_edit_blog_post', post_id=post.id) }}" class="btn-sm btn-ghost">Edit</a>
+              <form method="POST" action="{{ url_for('admin_delete_blog_post', post_id=post.id) }}"
+                    onsubmit="return confirm('Delete this post?')">
+                <button type="submit" class="btn-sm btn-red">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="padding:48px; text-align:center; color:var(--muted);">
+    <div style="font-size:2.5rem; margin-bottom:12px;">📝</div>
+    <p style="font-weight:600; margin-bottom:4px;">No posts yet</p>
+    <p style="font-size:.85rem;">Write your first blog post to engage customers.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

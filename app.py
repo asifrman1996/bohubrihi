@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 from datetime import datetime
-import os, json, hashlib, sys
+import os, re, json, hashlib, sys
 
 try:
     from slack_sdk import WebClient as SlackClient
@@ -116,6 +116,63 @@ class Order(db.Model):
     @property
     def items(self):
         return json.loads(self.items_json)
+
+
+class SiteSetting(db.Model):
+    __tablename__ = 'site_settings'
+    key   = db.Column(db.String(100), primary_key=True)
+    value = db.Column(db.Text, default='')
+
+
+class Testimonial(db.Model):
+    __tablename__ = 'testimonials'
+    id             = db.Column(db.Integer, primary_key=True)
+    customer_name  = db.Column(db.String(200), nullable=False)
+    customer_photo = db.Column(db.String(300), default='')
+    review_text    = db.Column(db.Text, nullable=False)
+    star_rating    = db.Column(db.Integer, nullable=False, default=5)
+    active         = db.Column(db.Boolean, default=True)
+    created_at     = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class BeforeAfter(db.Model):
+    __tablename__ = 'before_after'
+    id           = db.Column(db.Integer, primary_key=True)
+    before_image = db.Column(db.String(300), default='')
+    after_image  = db.Column(db.String(300), default='')
+    caption      = db.Column(db.String(300), default='')
+    active       = db.Column(db.Boolean, default=True)
+    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class BlogPost(db.Model):
+    __tablename__ = 'blog_posts'
+    id          = db.Column(db.Integer, primary_key=True)
+    title       = db.Column(db.String(300), nullable=False)
+    slug        = db.Column(db.String(300), nullable=False, unique=True)
+    cover_image = db.Column(db.String(300), default='')
+    body        = db.Column(db.Text, default='')
+    published   = db.Column(db.Boolean, default=False)
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Page(db.Model):
+    __tablename__ = 'pages'
+    slug       = db.Column(db.String(100), primary_key=True)
+    title      = db.Column(db.String(200), nullable=False)
+    body       = db.Column(db.Text, default='')
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Ingredient(db.Model):
+    __tablename__ = 'ingredients'
+    id          = db.Column(db.Integer, primary_key=True)
+    name        = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, default='')
+    benefits    = db.Column(db.Text, default='')
+    source      = db.Column(db.String(200), default='')
+    image       = db.Column(db.String(300), default='')
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 SLACK_BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN', '')
@@ -284,6 +341,58 @@ def admin_required(f):
             return redirect(url_for('admin_login'))
         return f(*args, **kwargs)
     return decorated
+
+
+SETTING_KEYS = [
+    'announcement_text', 'announcement_active',
+    'hero_headline', 'hero_subheadline', 'hero_button_text',
+    'hero_button_link', 'hero_image_url',
+]
+
+PAGE_SLUGS = [
+    ('faq',      'FAQ'),
+    ('shipping', 'Shipping Policy'),
+    ('returns',  'Returns Policy'),
+    ('about',    'About Us'),
+]
+
+
+def get_setting(key, default=''):
+    s = SiteSetting.query.get(key)
+    return s.value if s else default
+
+
+def set_setting(key, value):
+    s = SiteSetting.query.get(key)
+    if s:
+        s.value = value
+    else:
+        db.session.add(SiteSetting(key=key, value=value))
+
+
+def _slugify(text):
+    slug = re.sub(r'[^\w\s-]', '', text.lower().strip())
+    return re.sub(r'[\s_-]+', '-', slug).strip('-')
+
+
+def _unique_blog_slug(title, exclude_id=None):
+    base = _slugify(title)
+    slug, n = base, 1
+    while True:
+        q = BlogPost.query.filter_by(slug=slug)
+        if exclude_id:
+            q = q.filter(BlogPost.id != exclude_id)
+        if not q.first():
+            return slug
+        slug = f'{base}-{n}'
+        n += 1
+
+
+def _seed_pages():
+    for slug, title in PAGE_SLUGS:
+        if not Page.query.get(slug):
+            db.session.add(Page(slug=slug, title=title, body=''))
+    db.session.commit()
 
 
 def seed_data():
@@ -859,9 +968,327 @@ def admin_settings():
                            logo_exists=logo_exists)
 
 
+# ─── Site Settings: General ───────────────────────────────────────────────────
+
+@app.route('/admin/site-settings/general', methods=['GET', 'POST'])
+@admin_required
+def admin_site_settings_general():
+    if request.method == 'POST':
+        for key in SETTING_KEYS:
+            if key == 'announcement_active':
+                value = '1' if request.form.get(key) else '0'
+            elif key == 'hero_image_url':
+                f = request.files.get('hero_image_file')
+                if f and f.filename:
+                    uploaded = save_uploaded_image(f)
+                    value = uploaded if uploaded else request.form.get(key, '').strip()
+                else:
+                    value = request.form.get(key, '').strip()
+            else:
+                value = request.form.get(key, '').strip()
+            set_setting(key, value)
+        db.session.commit()
+        flash('Site settings saved.', 'success')
+        return redirect(url_for('admin_site_settings_general'))
+    settings = {key: get_setting(key) for key in SETTING_KEYS}
+    return render_template('admin/site_settings_general.html', settings=settings)
+
+
+# ─── Testimonials ─────────────────────────────────────────────────────────────
+
+@app.route('/admin/testimonials')
+@admin_required
+def admin_testimonials():
+    items = Testimonial.query.order_by(Testimonial.created_at.desc()).all()
+    return render_template('admin/testimonials.html', items=items)
+
+
+@app.route('/admin/testimonials/add', methods=['GET', 'POST'])
+@admin_required
+def admin_add_testimonial():
+    if request.method == 'POST':
+        photo = save_uploaded_image(request.files.get('customer_photo'))
+        try:
+            rating = max(1, min(5, int(request.form.get('star_rating', 5))))
+        except ValueError:
+            rating = 5
+        t = Testimonial(
+            customer_name=request.form['customer_name'].strip(),
+            customer_photo=photo,
+            review_text=request.form.get('review_text', '').strip(),
+            star_rating=rating,
+            active=bool(request.form.get('active')),
+        )
+        db.session.add(t)
+        db.session.commit()
+        flash('Testimonial added.', 'success')
+        return redirect(url_for('admin_testimonials'))
+    return render_template('admin/testimonial_form.html', item=None)
+
+
+@app.route('/admin/testimonials/edit/<int:tid>', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_testimonial(tid):
+    t = Testimonial.query.get_or_404(tid)
+    if request.method == 'POST':
+        f = request.files.get('customer_photo')
+        if f and f.filename:
+            new_photo = save_uploaded_image(f)
+            if new_photo:
+                delete_uploaded_image(t.customer_photo)
+                t.customer_photo = new_photo
+        try:
+            rating = max(1, min(5, int(request.form.get('star_rating', 5))))
+        except ValueError:
+            rating = 5
+        t.customer_name = request.form['customer_name'].strip()
+        t.review_text   = request.form.get('review_text', '').strip()
+        t.star_rating   = rating
+        t.active        = bool(request.form.get('active'))
+        db.session.commit()
+        flash('Testimonial updated.', 'success')
+        return redirect(url_for('admin_testimonials'))
+    return render_template('admin/testimonial_form.html', item=t)
+
+
+@app.route('/admin/testimonials/delete/<int:tid>', methods=['POST'])
+@admin_required
+def admin_delete_testimonial(tid):
+    t = Testimonial.query.get_or_404(tid)
+    delete_uploaded_image(t.customer_photo)
+    db.session.delete(t)
+    db.session.commit()
+    flash('Testimonial deleted.', 'success')
+    return redirect(url_for('admin_testimonials'))
+
+
+# ─── Before & After ───────────────────────────────────────────────────────────
+
+@app.route('/admin/before-after')
+@admin_required
+def admin_before_after():
+    items = BeforeAfter.query.order_by(BeforeAfter.created_at.desc()).all()
+    return render_template('admin/before_after.html', items=items)
+
+
+@app.route('/admin/before-after/add', methods=['GET', 'POST'])
+@admin_required
+def admin_add_before_after():
+    if request.method == 'POST':
+        before_img = save_uploaded_image(request.files.get('before_image'))
+        after_img  = save_uploaded_image(request.files.get('after_image'))
+        ba = BeforeAfter(
+            before_image=before_img,
+            after_image=after_img,
+            caption=request.form.get('caption', '').strip(),
+            active=bool(request.form.get('active')),
+        )
+        db.session.add(ba)
+        db.session.commit()
+        flash('Before & After entry added.', 'success')
+        return redirect(url_for('admin_before_after'))
+    return render_template('admin/before_after_form.html', item=None)
+
+
+@app.route('/admin/before-after/edit/<int:bid>', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_before_after(bid):
+    ba = BeforeAfter.query.get_or_404(bid)
+    if request.method == 'POST':
+        f_b = request.files.get('before_image')
+        if f_b and f_b.filename:
+            new_img = save_uploaded_image(f_b)
+            if new_img:
+                delete_uploaded_image(ba.before_image)
+                ba.before_image = new_img
+        f_a = request.files.get('after_image')
+        if f_a and f_a.filename:
+            new_img = save_uploaded_image(f_a)
+            if new_img:
+                delete_uploaded_image(ba.after_image)
+                ba.after_image = new_img
+        ba.caption = request.form.get('caption', '').strip()
+        ba.active  = bool(request.form.get('active'))
+        db.session.commit()
+        flash('Before & After entry updated.', 'success')
+        return redirect(url_for('admin_before_after'))
+    return render_template('admin/before_after_form.html', item=ba)
+
+
+@app.route('/admin/before-after/delete/<int:bid>', methods=['POST'])
+@admin_required
+def admin_delete_before_after(bid):
+    ba = BeforeAfter.query.get_or_404(bid)
+    delete_uploaded_image(ba.before_image)
+    delete_uploaded_image(ba.after_image)
+    db.session.delete(ba)
+    db.session.commit()
+    flash('Before & After entry deleted.', 'success')
+    return redirect(url_for('admin_before_after'))
+
+
+# ─── Blog ─────────────────────────────────────────────────────────────────────
+
+@app.route('/admin/blog')
+@admin_required
+def admin_blog():
+    posts = BlogPost.query.order_by(BlogPost.created_at.desc()).all()
+    return render_template('admin/blog.html', posts=posts)
+
+
+@app.route('/admin/blog/add', methods=['GET', 'POST'])
+@admin_required
+def admin_add_blog_post():
+    if request.method == 'POST':
+        title = request.form['title'].strip()
+        cover = save_uploaded_image(request.files.get('cover_image'))
+        post  = BlogPost(
+            title=title,
+            slug=_unique_blog_slug(title),
+            cover_image=cover,
+            body=request.form.get('body', ''),
+            published=bool(request.form.get('published')),
+        )
+        db.session.add(post)
+        db.session.commit()
+        flash(f'"{post.title}" saved.', 'success')
+        return redirect(url_for('admin_blog'))
+    return render_template('admin/blog_form.html', post=None)
+
+
+@app.route('/admin/blog/edit/<int:post_id>', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_blog_post(post_id):
+    post = BlogPost.query.get_or_404(post_id)
+    if request.method == 'POST':
+        f = request.files.get('cover_image')
+        if f and f.filename:
+            new_img = save_uploaded_image(f)
+            if new_img:
+                delete_uploaded_image(post.cover_image)
+                post.cover_image = new_img
+        title = request.form['title'].strip()
+        if title != post.title:
+            post.slug = _unique_blog_slug(title, exclude_id=post.id)
+        post.title     = title
+        post.body      = request.form.get('body', '')
+        post.published = bool(request.form.get('published'))
+        db.session.commit()
+        flash(f'"{post.title}" updated.', 'success')
+        return redirect(url_for('admin_blog'))
+    return render_template('admin/blog_form.html', post=post)
+
+
+@app.route('/admin/blog/delete/<int:post_id>', methods=['POST'])
+@admin_required
+def admin_delete_blog_post(post_id):
+    post = BlogPost.query.get_or_404(post_id)
+    delete_uploaded_image(post.cover_image)
+    title = post.title
+    db.session.delete(post)
+    db.session.commit()
+    flash(f'"{title}" deleted.', 'success')
+    return redirect(url_for('admin_blog'))
+
+
+@app.route('/admin/blog/<int:post_id>/toggle', methods=['POST'])
+@admin_required
+def admin_toggle_blog_post(post_id):
+    post = BlogPost.query.get_or_404(post_id)
+    post.published = not post.published
+    db.session.commit()
+    flash(f'"{post.title}" {"published" if post.published else "unpublished"}.', 'success')
+    return redirect(url_for('admin_blog'))
+
+
+# ─── Pages ────────────────────────────────────────────────────────────────────
+
+@app.route('/admin/pages')
+@admin_required
+def admin_pages():
+    pages = {p.slug: p for p in Page.query.all()}
+    return render_template('admin/pages.html', pages=pages, page_slugs=PAGE_SLUGS)
+
+
+@app.route('/admin/pages/<slug>', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_page(slug):
+    page = Page.query.get_or_404(slug)
+    if request.method == 'POST':
+        page.title      = request.form['title'].strip()
+        page.body       = request.form.get('body', '')
+        page.updated_at = datetime.utcnow()
+        db.session.commit()
+        flash(f'"{page.title}" updated.', 'success')
+        return redirect(url_for('admin_pages'))
+    return render_template('admin/page_form.html', page=page)
+
+
+# ─── Ingredients ──────────────────────────────────────────────────────────────
+
+@app.route('/admin/ingredients')
+@admin_required
+def admin_ingredients():
+    items = Ingredient.query.order_by(Ingredient.name).all()
+    return render_template('admin/ingredients.html', items=items)
+
+
+@app.route('/admin/ingredients/add', methods=['GET', 'POST'])
+@admin_required
+def admin_add_ingredient():
+    if request.method == 'POST':
+        img = save_uploaded_image(request.files.get('image'))
+        ing = Ingredient(
+            name=request.form['name'].strip(),
+            description=request.form.get('description', '').strip(),
+            benefits=request.form.get('benefits', '').strip(),
+            source=request.form.get('source', '').strip(),
+            image=img,
+        )
+        db.session.add(ing)
+        db.session.commit()
+        flash(f'"{ing.name}" added.', 'success')
+        return redirect(url_for('admin_ingredients'))
+    return render_template('admin/ingredient_form.html', item=None)
+
+
+@app.route('/admin/ingredients/edit/<int:iid>', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_ingredient(iid):
+    ing = Ingredient.query.get_or_404(iid)
+    if request.method == 'POST':
+        f = request.files.get('image')
+        if f and f.filename:
+            new_img = save_uploaded_image(f)
+            if new_img:
+                delete_uploaded_image(ing.image)
+                ing.image = new_img
+        ing.name        = request.form['name'].strip()
+        ing.description = request.form.get('description', '').strip()
+        ing.benefits    = request.form.get('benefits', '').strip()
+        ing.source      = request.form.get('source', '').strip()
+        db.session.commit()
+        flash(f'"{ing.name}" updated.', 'success')
+        return redirect(url_for('admin_ingredients'))
+    return render_template('admin/ingredient_form.html', item=ing)
+
+
+@app.route('/admin/ingredients/delete/<int:iid>', methods=['POST'])
+@admin_required
+def admin_delete_ingredient(iid):
+    ing = Ingredient.query.get_or_404(iid)
+    delete_uploaded_image(ing.image)
+    name = ing.name
+    db.session.delete(ing)
+    db.session.commit()
+    flash(f'"{name}" deleted.', 'success')
+    return redirect(url_for('admin_ingredients'))
+
+
 with app.app_context():
     db.create_all()
     seed_data()
+    _seed_pages()
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

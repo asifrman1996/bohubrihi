@@ -104,6 +104,73 @@
         <span class="nav-label">Categories</span>
       </a>
 
+      <!-- Site Content section -->
+      {% set _ep = request.endpoint or '' %}
+      {% set _in_sc = 'site_settings' in _ep or 'testimonial' in _ep or 'before_after' in _ep or 'blog' in _ep or 'page' in _ep or 'ingredient' in _ep %}
+      <div class="nav-section-label">Site Content</div>
+
+      <a href="{{ url_for('admin_site_settings_general') }}"
+         class="sidebar-nav-link {% if 'site_settings' in _ep %}active{% endif %}">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="11" height="4" rx="1"/><rect x="3" y="17" width="7" height="4" rx="1"/>
+          </svg>
+        </span>
+        <span class="nav-label">General</span>
+      </a>
+
+      <a href="{{ url_for('admin_testimonials') }}"
+         class="sidebar-nav-link {% if 'testimonial' in _ep %}active{% endif %}">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </span>
+        <span class="nav-label">Testimonials</span>
+      </a>
+
+      <a href="{{ url_for('admin_before_after') }}"
+         class="sidebar-nav-link {% if 'before_after' in _ep %}active{% endif %}">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="9" height="18" rx="1"/><rect x="13" y="3" width="9" height="18" rx="1"/>
+          </svg>
+        </span>
+        <span class="nav-label">Before &amp; After</span>
+      </a>
+
+      <a href="{{ url_for('admin_blog') }}"
+         class="sidebar-nav-link {% if 'blog' in _ep %}active{% endif %}">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </span>
+        <span class="nav-label">Blog</span>
+      </a>
+
+      <a href="{{ url_for('admin_pages') }}"
+         class="sidebar-nav-link {% if 'page' in _ep %}active{% endif %}">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          </svg>
+        </span>
+        <span class="nav-label">Pages</span>
+      </a>
+
+      <a href="{{ url_for('admin_ingredients') }}"
+         class="sidebar-nav-link {% if 'ingredient' in _ep %}active{% endif %}">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </span>
+        <span class="nav-label">Ingredients</span>
+      </a>
+
+      <div class="nav-section-label" style="margin-top:8px;">System</div>
+
       <a href="{{ url_for('admin_settings') }}"
          class="sidebar-nav-link {% if request.endpoint == 'admin_settings' %}active{% endif %}">
         <span class="nav-icon">

@@ -1,0 +1,80 @@
+{% extends 'admin/base.html' %}
+{% block title %}{{ 'Edit' if item else 'Add' }} Ingredient – Admin{% endblock %}
+{% block page_title %}{{ '✏️ Edit Ingredient' if item else '➕ Add Ingredient' }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:16px;">
+  <a href="{{ url_for('admin_ingredients') }}" style="color:var(--teal); font-size:.9rem;">← Back to Ingredients</a>
+</div>
+
+<div class="admin-form-card">
+  <form method="POST" enctype="multipart/form-data">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+
+      <div class="form-group">
+        <label>Ingredient Name *</label>
+        <input type="text" name="name"
+               value="{{ item.name if item else '' }}"
+               required placeholder="e.g. Neem Extract">
+      </div>
+
+      <div class="form-group">
+        <label>Source / Origin</label>
+        <input type="text" name="source"
+               value="{{ item.source if item else '' }}"
+               placeholder="e.g. Bangladesh, India, Sri Lanka">
+      </div>
+
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Description</label>
+        <textarea name="description" rows="4"
+                  placeholder="What is this ingredient? Where does it come from?">{{ item.description if item else '' }}</textarea>
+      </div>
+
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Benefits</label>
+        <textarea name="benefits" rows="4"
+                  placeholder="Key skin/hair benefits of this ingredient. One benefit per line or use commas.">{{ item.benefits if item else '' }}</textarea>
+      </div>
+
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Ingredient Image</label>
+        {% if item and item.image %}
+        <div class="current-img-wrap">
+          <img src="{{ image_url(item.image) }}"
+               style="width:80px; height:80px; border-radius:8px; object-fit:cover;">
+          <span style="font-size:.85rem; color:var(--muted);">Current image — upload a new one to replace</span>
+        </div>
+        {% endif %}
+        <input type="file" name="image" accept="image/*" id="imgInput"
+               style="padding:10px; background:#f8fafc; border:2px dashed var(--border); border-radius:8px; width:100%;">
+        <div id="imgPreview" style="display:none; margin-top:10px; border-radius:8px; overflow:hidden; max-width:140px;">
+          <img id="previewImg" src="" alt="Preview">
+        </div>
+      </div>
+
+    </div>
+
+    <div style="display:flex; gap:12px; margin-top:8px;">
+      <button type="submit" class="btn btn-teal">
+        {{ '💾 Save Changes' if item else '➕ Add Ingredient' }}
+      </button>
+      <a href="{{ url_for('admin_ingredients') }}" class="btn" style="background:#e2e8f0; color:var(--navy);">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+document.getElementById('imgInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      document.getElementById('previewImg').src = ev.target.result;
+      document.getElementById('imgPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+});
+</script>
+{% endblock %}

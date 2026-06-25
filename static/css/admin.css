@@ -516,6 +516,20 @@ tbody tr:hover { background: #fafcff; }
 .dash-filter-item .fi-icon { font-size: .85rem; width: 18px; text-align: center; flex-shrink: 0; }
 .dash-filter-item .fi-label { flex: 1; }
 
+/* ── Nav Section Label ───────────────────────────── */
+.nav-section-label {
+  padding: 14px 12px 4px;
+  font-size: .57rem;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.2);
+  white-space: nowrap;
+  overflow: hidden;
+  user-select: none;
+}
+.admin-sidebar.collapsed .nav-section-label { display: none; }
+
 /* ── Filter Bar ──────────────────────────────────── */
 .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
 .filter-chip {

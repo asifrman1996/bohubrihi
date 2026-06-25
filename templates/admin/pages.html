@@ -1,0 +1,52 @@
+{% extends 'admin/base.html' %}
+{% block title %}Pages – Admin{% endblock %}
+{% block page_title %}Static Pages{% endblock %}
+
+{% block content %}
+<div class="admin-table-wrap">
+  <div class="admin-table-header">
+    <h3>{{ page_slugs|length }} Pages</h3>
+  </div>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Page</th>
+          <th>URL Slug</th>
+          <th>Last Updated</th>
+          <th>Content</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for slug, label in page_slugs %}
+        {% set page = pages.get(slug) %}
+        <tr>
+          <td style="font-weight:600;">{{ label }}</td>
+          <td style="font-family:monospace; font-size:.82rem; color:var(--muted);">/{{ slug }}</td>
+          <td style="color:var(--muted); font-size:.82rem;">
+            {% if page and page.updated_at %}
+            {{ page.updated_at.strftime('%d %b %Y, %H:%M') }}
+            {% else %}
+            Never edited
+            {% endif %}
+          </td>
+          <td>
+            {% if page and page.body %}
+            <span class="badge badge-green">Has content</span>
+            {% else %}
+            <span class="badge badge-yellow">Empty</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if page %}
+            <a href="{{ url_for('admin_edit_page', slug=slug) }}" class="btn-sm btn-ghost">Edit Content</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

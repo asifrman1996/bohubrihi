@@ -1,0 +1,80 @@
+{% extends 'admin/base.html' %}
+{% block title %}{{ 'Edit Post' if post else 'New Post' }} – Admin{% endblock %}
+{% block page_title %}{{ '✏️ Edit Post' if post else '➕ New Blog Post' }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:16px;">
+  <a href="{{ url_for('admin_blog') }}" style="color:var(--teal); font-size:.9rem;">← Back to Blog</a>
+</div>
+
+<div class="admin-form-card" style="max-width:860px;">
+  <form method="POST" enctype="multipart/form-data">
+    <div class="form-group">
+      <label>Title *</label>
+      <input type="text" name="title"
+             value="{{ post.title if post else '' }}"
+             required placeholder="e.g. 5 Benefits of Neem for Your Skin">
+    </div>
+
+    {% if post %}
+    <div class="form-group">
+      <label>Slug (auto-updated when title changes)</label>
+      <div style="padding:10px 13px; background:#f8fafc; border:2px solid var(--border); border-radius:8px; font-family:monospace; font-size:.88rem; color:var(--muted);">
+        /blog/{{ post.slug }}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="form-group">
+      <label>Cover Image</label>
+      {% if post and post.cover_image %}
+      <div class="current-img-wrap">
+        <img src="{{ image_url(post.cover_image) }}"
+             style="width:100px; height:65px; border-radius:8px; object-fit:cover;">
+        <span style="font-size:.85rem; color:var(--muted);">Current cover — upload a new one to replace</span>
+      </div>
+      {% endif %}
+      <input type="file" name="cover_image" accept="image/*" id="coverInput"
+             style="padding:10px; background:#f8fafc; border:2px dashed var(--border); border-radius:8px; width:100%;">
+      <div id="coverPreview" style="display:none; margin-top:10px; border-radius:8px; overflow:hidden; max-width:260px;">
+        <img id="coverImg" src="" alt="Preview">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Body <span style="font-weight:400; color:var(--muted);">(HTML is supported)</span></label>
+      <textarea name="body" rows="18"
+                placeholder="Write your post content here. You can use HTML tags like &lt;h2&gt;, &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;, &lt;img&gt;, etc.">{{ post.body if post else '' }}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" name="published" value="1"
+               {% if post and post.published %}checked{% endif %}>
+        Published (visible on site)
+      </label>
+    </div>
+
+    <div style="display:flex; gap:12px; margin-top:8px;">
+      <button type="submit" class="btn btn-teal">
+        {{ '💾 Save Changes' if post else '➕ Create Post' }}
+      </button>
+      <a href="{{ url_for('admin_blog') }}" class="btn" style="background:#e2e8f0; color:var(--navy);">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+document.getElementById('coverInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      document.getElementById('coverImg').src = ev.target.result;
+      document.getElementById('coverPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+});
+</script>
+{% endblock %}

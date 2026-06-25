@@ -1,0 +1,63 @@
+{% extends 'admin/base.html' %}
+{% block title %}Ingredients – Admin{% endblock %}
+{% block page_title %}Ingredients{% endblock %}
+
+{% block content %}
+<div class="admin-table-wrap">
+  <div class="admin-table-header">
+    <h3>{{ items|length }} Ingredient{{ 's' if items|length != 1 else '' }}</h3>
+    <a href="{{ url_for('admin_add_ingredient') }}" class="btn-sm btn-teal">+ Add Ingredient</a>
+  </div>
+
+  {% if items %}
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Source</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ing in items %}
+        <tr>
+          <td>
+            <div class="td-img">
+              {% if ing.image %}
+              <img src="{{ image_url(ing.image) }}" alt="{{ ing.name }}">
+              {% else %}
+              🌿
+              {% endif %}
+            </div>
+          </td>
+          <td style="font-weight:600;">{{ ing.name }}</td>
+          <td style="max-width:280px; color:var(--muted); font-size:.85rem;">
+            {{ ing.description[:80] }}{% if ing.description|length > 80 %}…{% endif %}
+          </td>
+          <td style="font-size:.85rem; color:var(--muted);">{{ ing.source or '—' }}</td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <a href="{{ url_for('admin_edit_ingredient', iid=ing.id) }}" class="btn-sm btn-ghost">Edit</a>
+              <form method="POST" action="{{ url_for('admin_delete_ingredient', iid=ing.id) }}"
+                    onsubmit="return confirm('Delete {{ ing.name }}?')">
+                <button type="submit" class="btn-sm btn-red">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="padding:48px; text-align:center; color:var(--muted);">
+    <div style="font-size:2.5rem; margin-bottom:12px;">🌿</div>
+    <p style="font-weight:600; margin-bottom:4px;">No ingredients yet</p>
+    <p style="font-size:.85rem;">Add your key ingredients to showcase on product pages.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

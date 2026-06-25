@@ -1,0 +1,35 @@
+{% extends 'admin/base.html' %}
+{% block title %}Edit {{ page.title }} – Admin{% endblock %}
+{% block page_title %}✏️ Edit Page: {{ page.title }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:16px;">
+  <a href="{{ url_for('admin_pages') }}" style="color:var(--teal); font-size:.9rem;">← Back to Pages</a>
+</div>
+
+<div class="admin-form-card" style="max-width:860px;">
+  <form method="POST">
+    <div class="form-group">
+      <label>Page Title</label>
+      <input type="text" name="title" value="{{ page.title }}" required
+             placeholder="Page title as shown in browser tab and heading">
+    </div>
+
+    <div class="form-group">
+      <label>Content <span style="font-weight:400; color:var(--muted);">(HTML is supported)</span></label>
+      <textarea name="body" rows="22"
+                placeholder="Write the page content here. HTML tags like &lt;h2&gt;, &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;a&gt; etc. are supported.">{{ page.body }}</textarea>
+    </div>
+
+    <div style="display:flex; gap:12px; margin-top:8px; align-items:center;">
+      <button type="submit" class="btn btn-teal">💾 Save Page</button>
+      <a href="{{ url_for('admin_pages') }}" class="btn" style="background:#e2e8f0; color:var(--navy);">Cancel</a>
+      {% if page.updated_at %}
+      <span style="margin-left:auto; font-size:.8rem; color:var(--muted);">
+        Last updated {{ page.updated_at.strftime('%d %b %Y at %H:%M') }}
+      </span>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

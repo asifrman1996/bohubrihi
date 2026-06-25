@@ -1,0 +1,77 @@
+{% extends 'admin/base.html' %}
+{% block title %}Testimonials – Admin{% endblock %}
+{% block page_title %}Testimonials{% endblock %}
+
+{% block content %}
+<div class="admin-table-wrap">
+  <div class="admin-table-header">
+    <h3>{{ items|length }} Testimonial{{ 's' if items|length != 1 else '' }}</h3>
+    <a href="{{ url_for('admin_add_testimonial') }}" class="btn-sm btn-teal">+ Add Testimonial</a>
+  </div>
+
+  {% if items %}
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Photo</th>
+          <th>Customer</th>
+          <th>Rating</th>
+          <th>Review</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in items %}
+        <tr>
+          <td>
+            <div class="td-img">
+              {% if t.customer_photo %}
+              <img src="{{ image_url(t.customer_photo) }}" alt="{{ t.customer_name }}">
+              {% else %}
+              👤
+              {% endif %}
+            </div>
+          </td>
+          <td style="font-weight:600;">{{ t.customer_name }}</td>
+          <td>
+            <span style="color:#f59e0b; font-size:1rem; letter-spacing:1px;">
+              {% for i in range(t.star_rating) %}★{% endfor %}{% for i in range(5 - t.star_rating) %}☆{% endfor %}
+            </span>
+          </td>
+          <td style="max-width:300px; color:var(--muted); font-size:.85rem;">
+            {{ t.review_text[:100] }}{% if t.review_text|length > 100 %}…{% endif %}
+          </td>
+          <td>
+            {% if t.active %}
+            <span class="badge badge-green">Active</span>
+            {% else %}
+            <span class="badge badge-red">Hidden</span>
+            {% endif %}
+          </td>
+          <td style="color:var(--muted); font-size:.82rem;">{{ t.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <a href="{{ url_for('admin_edit_testimonial', tid=t.id) }}" class="btn-sm btn-ghost">Edit</a>
+              <form method="POST" action="{{ url_for('admin_delete_testimonial', tid=t.id) }}"
+                    onsubmit="return confirm('Delete this testimonial?')">
+                <button type="submit" class="btn-sm btn-red">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="padding:48px; text-align:center; color:var(--muted);">
+    <div style="font-size:2.5rem; margin-bottom:12px;">💬</div>
+    <p style="font-weight:600; margin-bottom:4px;">No testimonials yet</p>
+    <p style="font-size:.85rem;">Add customer reviews to display on your storefront.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
