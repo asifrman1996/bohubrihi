@@ -3,12 +3,23 @@
 {% block page_title %}{{ '✏️ Edit Post' if post else '➕ New Blog Post' }}{% endblock %}
 
 {% block content %}
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<style>
+  #quillEditor { min-height: 420px; font-size: .95rem; font-family: 'Segoe UI', system-ui, sans-serif; }
+  .ql-container { border-radius: 0 0 8px 8px; border-color: var(--border) !important; }
+  .ql-toolbar { border-radius: 8px 8px 0 0; border-color: var(--border) !important; background: #f8fafc; }
+  .ql-container.ql-snow:focus-within,
+  .ql-toolbar.ql-snow:focus-within { border-color: var(--teal) !important; }
+  .ql-editor { min-height: 400px; }
+</style>
+
 <div style="margin-bottom:16px;">
   <a href="{{ url_for('admin_blog') }}" style="color:var(--teal); font-size:.9rem;">← Back to Blog</a>
 </div>
 
 <div class="admin-form-card" style="max-width:860px;">
-  <form method="POST" enctype="multipart/form-data">
+  <form method="POST" enctype="multipart/form-data" id="blogForm">
+
     <div class="form-group">
       <label>Title *</label>
       <input type="text" name="title"
@@ -42,9 +53,11 @@
     </div>
 
     <div class="form-group">
-      <label>Body <span style="font-weight:400; color:var(--muted);">(HTML is supported)</span></label>
-      <textarea name="body" rows="18"
-                placeholder="Write your post content here. You can use HTML tags like &lt;h2&gt;, &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;, &lt;img&gt;, etc.">{{ post.body if post else '' }}</textarea>
+      <label>Body</label>
+      <!-- Quill editor — visible to user -->
+      <div id="quillEditor">{% if post and post.body %}{{ post.body | safe }}{% endif %}</div>
+      <!-- Hidden input that carries the HTML to Flask on submit -->
+      <input type="hidden" name="body" id="bodyInput">
     </div>
 
     <div class="form-group">
@@ -64,8 +77,30 @@
   </form>
 </div>
 
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <script>
-document.getElementById('coverInput').addEventListener('change', function(e) {
+var quill = new Quill('#quillEditor', {
+  theme: 'snow',
+  modules: {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['blockquote'],
+      ['link', 'image'],
+      [{ color: [] }, { background: [] }],
+      ['clean']
+    ]
+  }
+});
+
+// Before submitting, copy Quill HTML into the hidden input
+document.getElementById('blogForm').addEventListener('submit', function () {
+  document.getElementById('bodyInput').value = quill.root.innerHTML;
+});
+
+// Cover image preview
+document.getElementById('coverInput').addEventListener('change', function (e) {
   const file = e.target.files[0];
   if (file) {
     const reader = new FileReader();

@@ -267,35 +267,33 @@ def _unique_filename(original_filename):
 
 
 def save_uploaded_image(file_storage):
-    """Save an uploaded image and return the value to store in the image column:
-    a public URL when Supabase Storage is configured, otherwise a local filename."""
+    """Upload an image to Supabase Storage and return its public URL.
+    Returns '' if Supabase is not configured or the upload fails."""
     if not file_storage or not file_storage.filename or not allowed_file(file_storage.filename):
         return ''
     filename = _unique_filename(file_storage.filename)
 
-    if supabase_client:
-        try:
-            file_bytes = file_storage.read()
-            content_type = file_storage.mimetype or 'application/octet-stream'
-            _log(f"Uploading '{filename}' ({len(file_bytes)} bytes, {content_type}) "
-                 f"to bucket '{SUPABASE_BUCKET}'...")
-            supabase_client.storage.from_(SUPABASE_BUCKET).upload(
-                filename, file_bytes, {'content-type': content_type}
-            )
-            url = supabase_client.storage.from_(SUPABASE_BUCKET).get_public_url(filename)
-            _log(f"Upload OK: {url}")
-            return url
-        except Exception as e:
-            import traceback
-            _log(f"ERROR: upload failed for '{filename}' in bucket '{SUPABASE_BUCKET}', "
-                 f"falling back to local disk. {type(e).__name__}: {e}")
-            traceback.print_exc(file=sys.stderr)
-            # Fall through to local save so the admin doesn't lose the image entirely.
-    else:
-        _log(f"No client configured, saving '{filename}' locally instead.")
+    if not supabase_client:
+        _log(f"Cannot save '{filename}': Supabase not configured (missing SUPABASE_URL/SUPABASE_KEY).")
+        return ''
 
-    file_storage.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-    return filename
+    try:
+        file_bytes = file_storage.read()
+        content_type = file_storage.mimetype or 'application/octet-stream'
+        _log(f"Uploading '{filename}' ({len(file_bytes)} bytes, {content_type}) "
+             f"to bucket '{SUPABASE_BUCKET}'...")
+        supabase_client.storage.from_(SUPABASE_BUCKET).upload(
+            filename, file_bytes, {'content-type': content_type}
+        )
+        url = supabase_client.storage.from_(SUPABASE_BUCKET).get_public_url(filename)
+        _log(f"Upload OK: {url}")
+        return url
+    except Exception as e:
+        import traceback
+        _log(f"ERROR: upload failed for '{filename}' in bucket '{SUPABASE_BUCKET}'. "
+             f"{type(e).__name__}: {e}")
+        traceback.print_exc(file=sys.stderr)
+        return ''
 
 
 def delete_uploaded_image(image_value):
