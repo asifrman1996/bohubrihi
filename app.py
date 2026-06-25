@@ -1357,6 +1357,26 @@ def admin_delete_ingredient(iid):
     return redirect(url_for('admin_ingredients'))
 
 
+def _seed_product_faqs():
+    DEFAULT_FAQS = [
+        ("Is this product safe for sensitive skin?",
+         "Yes, all Bohubrihi products are made with natural ingredients and are free from harsh chemicals."),
+        ("How long will delivery take?",
+         "We deliver within 2-5 working days across Bangladesh via cash on delivery."),
+        ("What is your return policy?",
+         "We accept returns within 7 days if the product is unused and in original packaging."),
+    ]
+    products = Product.query.all()
+    changed = False
+    for product in products:
+        if ProductFAQ.query.filter_by(product_id=product.id).count() == 0:
+            for i, (q, a) in enumerate(DEFAULT_FAQS):
+                db.session.add(ProductFAQ(product_id=product.id, question=q, answer=a, sort_order=i))
+            changed = True
+    if changed:
+        db.session.commit()
+
+
 # ─── Product FAQs ─────────────────────────────────────────────────────────────
 
 @app.route('/admin/products/<int:pid>/faqs/add', methods=['POST'])
@@ -1390,6 +1410,7 @@ with app.app_context():
     db.create_all()
     seed_data()
     _seed_pages()
+    _seed_product_faqs()
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

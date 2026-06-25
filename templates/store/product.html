@@ -62,10 +62,6 @@
         </div>
         {% endif %}
 
-        {% if product.weight %}
-        <div class="pd-weight">{{ product.weight }}</div>
-        {% endif %}
-
         <!-- Price -->
         <div class="pd-price-row">
           <span class="pd-price">৳{{ product.price|int }}</span>
@@ -88,32 +84,26 @@
 
         <!-- Add to cart -->
         {% if product.in_stock %}
-        <div class="pd-cart-row">
-          <div class="pd-qty">
-            <button class="pd-qty-btn" id="pdMinus">−</button>
-            <span class="pd-qty-num" id="pdQty">1</span>
-            <button class="pd-qty-btn" id="pdPlus">+</button>
-          </div>
+        <hr class="pd-divider">
+        <div class="pd-cart-layout">
+          <select class="pd-qty-select" id="pdQtySelect">
+            {% for i in range(1, 11) %}<option value="{{ i }}">{{ i }}</option>{% endfor %}
+          </select>
           <button class="pd-add-btn" onclick="
-            const qty = parseInt(document.getElementById('pdQty').textContent);
+            const qty = parseInt(document.getElementById('pdQtySelect').value);
             for(let i=0;i<qty;i++) addToCart({{ product.id }},'{{ product.name|replace("'","\\'") }}',{{ product.price }},'{{ product.image }}','{{ product.category.name }}');
-          ">
-            🛒 Add to Cart
-          </button>
+          ">🛒 Add to Cart</button>
         </div>
-
-        <!-- Bundle nudge -->
-        <div class="pd-bundle-nudge">
-          🎁 Add 3+ items from <strong>{{ product.category.name }}</strong> — get <strong>10% off</strong> automatically.
+        <hr class="pd-divider">
+        <div class="pd-specs">
+          {% if product.weight %}<span>{{ product.weight|upper }}</span><span class="pd-spec-dot">·</span>{% endif %}
+          <span>{{ product.category.name|upper }}</span><span class="pd-spec-dot">·</span><span>HANDCRAFTED</span>
         </div>
-
-        <!-- Trust badges -->
-        <div class="pd-trust-row">
-          <div class="pd-trust-item"><span>🌿</span><span>Organic<br>Certified</span></div>
-          <div class="pd-trust-item"><span>🧪</span><span>No<br>Chemicals</span></div>
-          <div class="pd-trust-item"><span>💚</span><span>Cruelty<br>Free</span></div>
-          <div class="pd-trust-item"><span>🇧🇩</span><span>Made in<br>Bangladesh</span></div>
-        </div>
+        <button class="pd-share-btn" onclick="shareProduct()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share this product
+        </button>
+        <div class="pd-trust-strip">100% ORGANIC &nbsp;·&nbsp; NO CHEMICALS &nbsp;·&nbsp; CRUELTY FREE &nbsp;·&nbsp; MADE IN BANGLADESH</div>
         {% else %}
         <div class="pd-out-of-stock">
           Currently out of stock — check back soon!
@@ -184,9 +174,11 @@
         <div class="product-card pd-related-card">
           <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-img-wrap">
             {% if p.image %}
-              <img src="{{ image_url(p.image) }}" alt="{{ p.name }}">
+              <img src="{{ image_url(p.image) }}" alt="{{ p.name }}"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="product-img-placeholder product-img-letter" style="display:none">{{ p.name[0]|upper }}</div>
             {% else %}
-              <div class="product-img-placeholder">{{ p.category.icon }}</div>
+              <div class="product-img-placeholder product-img-letter">{{ p.name[0]|upper }}</div>
             {% endif %}
             {% if p.original_price %}<span class="badge-sale">SALE</span>{% endif %}
           </a>
@@ -318,15 +310,6 @@
 </script>
 <script>
 (function () {
-  // Qty buttons
-  const minus = document.getElementById('pdMinus');
-  const plus  = document.getElementById('pdPlus');
-  const qty   = document.getElementById('pdQty');
-  if (minus && plus && qty) {
-    minus.addEventListener('click', () => { let v = parseInt(qty.textContent); if (v > 1) qty.textContent = v - 1; });
-    plus.addEventListener('click',  () => { qty.textContent = parseInt(qty.textContent) + 1; });
-  }
-
   // Star picker
   const stars = document.querySelectorAll('#starPicker span');
   const input = document.getElementById('ratingInput');
@@ -341,6 +324,21 @@
     }
   }
 })();
+
+function shareProduct() {
+  const url   = window.location.href;
+  const title = '{{ product.name|replace("'", "\\'") }} – Bohubrihi Organics';
+  const btn   = document.querySelector('.pd-share-btn');
+  if (navigator.share) {
+    navigator.share({ title, url });
+  } else {
+    navigator.clipboard.writeText(url).then(() => {
+      const orig = btn.innerHTML;
+      btn.textContent = '✓ Link copied!';
+      setTimeout(() => { btn.innerHTML = orig; }, 2000);
+    });
+  }
+}
 
 function expandDesc() {
   document.getElementById('pdDescShort').style.display = 'none';
