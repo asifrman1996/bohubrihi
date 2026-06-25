@@ -135,7 +135,7 @@ nav a:hover, nav a.active { color: #fff; }
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(60,13,30,.82) 0%, rgba(60,13,30,.55) 100%);
+  background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 100%);
 }
 .hero-content {
   position: relative;
