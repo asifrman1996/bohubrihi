@@ -471,19 +471,43 @@ def seed_data():
 
 @app.route('/')
 def index():
-    categories      = Category.query.order_by(Category.sort_order).all()
-    featured        = Product.query.filter_by(featured=True, in_stock=True).limit(8).all()
+    categories       = Category.query.order_by(Category.sort_order).all()
+    featured         = Product.query.filter_by(featured=True, in_stock=True).limit(8).all()
     featured_bundles = Bundle.query.filter_by(featured=True, in_stock=True).all()
-    testimonials    = Testimonial.query.filter_by(active=True).order_by(Testimonial.created_at.desc()).all()
-    ba_items        = BeforeAfter.query.filter_by(active=True).order_by(BeforeAfter.created_at.desc()).all()
-    blog_previews   = BlogPost.query.filter_by(published=True).order_by(BlogPost.created_at.desc()).limit(3).all()
+    testimonials     = Testimonial.query.filter_by(active=True).order_by(Testimonial.created_at.desc()).all()
+    ba_items         = BeforeAfter.query.filter_by(active=True).order_by(BeforeAfter.created_at.desc()).all()
+    blog_previews    = BlogPost.query.filter_by(published=True).order_by(BlogPost.created_at.desc()).limit(3).all()
+
+    # Shop by Concern: first in-stock product image per concern category
+    concern_data = []
+    for slug, label, tagline in [
+        ('face-care', 'উজ্জ্বল ত্বক', 'ফেস কেয়ার কালেকশন'),
+        ('hair-care', 'চুলের যত্ন', 'হেয়ার কেয়ার কালেকশন'),
+        ('body-care', 'বডি কেয়ার', 'বডি কেয়ার কালেকশন'),
+    ]:
+        cat = next((c for c in categories if c.slug == slug), None)
+        img = ''
+        if cat:
+            p = Product.query.filter_by(category_id=cat.id, in_stock=True).filter(Product.image != '').first()
+            img = p.image if p else ''
+        concern_data.append({'slug': slug, 'label': label, 'tagline': tagline, 'image': img})
+
+    # Products by Category: up to 6 in-stock products per category
+    category_rows = []
+    for cat in categories:
+        prods = Product.query.filter_by(category_id=cat.id, in_stock=True).limit(6).all()
+        if prods:
+            category_rows.append((cat, prods))
+
     return render_template('store/index.html',
                            categories=categories,
                            featured=featured,
                            featured_bundles=featured_bundles,
                            testimonials=testimonials,
                            ba_items=ba_items,
-                           blog_previews=blog_previews)
+                           blog_previews=blog_previews,
+                           concern_data=concern_data,
+                           category_rows=category_rows)
 
 
 @app.route('/shop')

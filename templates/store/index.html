@@ -35,6 +35,31 @@
   </div>
 </section>
 
+<!-- ── Shop by Concern ────────────────────────────────────────────── -->
+<section class="concern-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">আপনার <span>প্রয়োজন</span> অনুযায়ী কিনুন</h2>
+    </div>
+    <div class="concern-grid">
+      {% for c in concern_data %}
+      <a href="{{ url_for('shop') }}?category={{ c.slug }}" class="concern-card">
+        {% if c.image %}
+        <div class="concern-card-bg" style="background-image:url('{{ image_url(c.image) }}')"></div>
+        {% else %}
+        <div class="concern-card-bg concern-card-no-img"></div>
+        {% endif %}
+        <div class="concern-card-overlay"></div>
+        <div class="concern-card-text">
+          <span class="concern-card-label">{{ c.label }}</span>
+          <span class="concern-card-tagline">{{ c.tagline }}</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
 {% if featured_bundles %}
 <!-- ── Bundle Deals ───────────────────────────────────────────────── -->
 <section class="bundle-deals-section">
@@ -121,6 +146,56 @@
     </div>
   </div>
 </section>
+
+<!-- ── Products by Category ───────────────────────────────────────── -->
+{% if category_rows %}
+<section class="cat-rows-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">আমাদের <span>কালেকশন</span></h2>
+    </div>
+    {% for cat, prods in category_rows %}
+    <div class="cat-row">
+      <div class="cat-row-header">
+        <span class="cat-row-title">{{ cat.name }}</span>
+        <a href="{{ url_for('shop') }}?category={{ cat.slug }}" class="cat-row-see-all">See all →</a>
+      </div>
+      <div class="cat-row-scroll">
+        {% for p in prods %}
+        <div class="product-card">
+          <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-img-wrap">
+            {% if p.image %}
+              <img src="{{ image_url(p.image) }}" alt="{{ p.name }}">
+            {% else %}
+              <div class="product-img-placeholder">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C8A0AC" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+              </div>
+            {% endif %}
+            {% if p.original_price %}<span class="badge-sale">SALE</span>{% endif %}
+          </a>
+          <div class="product-info">
+            <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-name">{{ p.name }}</a>
+            {% if p.weight %}<div class="product-weight">{{ p.weight }}</div>{% endif %}
+            {% if p.short_description %}<div class="product-desc">{{ p.short_description }}</div>{% endif %}
+            <div class="product-footer">
+              <div class="price-wrap">
+                <span class="price">{{ p.price|int }}</span>
+                {% if p.original_price %}<span class="original-price">{{ p.original_price|int }}</span>{% endif %}
+              </div>
+              <button class="add-cart-btn" onclick="addToCart({{ p.id }}, '{{ p.name|replace("'", "\\'") }}', {{ p.price }}, '{{ p.image }}', '{{ cat.name }}')">+ Add</button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 
 {% if testimonials %}
 <!-- ── Testimonials ───────────────────────────────────────────────── -->

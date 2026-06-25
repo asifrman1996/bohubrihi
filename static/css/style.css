@@ -324,10 +324,11 @@ button { cursor: pointer; border: none; }
   margin-top: 16px;
 }
 .footer-social a {
-  color: rgba(255,255,255,.55);
-  transition: color .2s;
+  color: var(--teal);
+  display: flex;
+  transition: color .2s, transform .2s;
 }
-.footer-social a:hover { color: #fff; }
+.footer-social a:hover { color: var(--teal-dark); transform: translateY(-2px); }
 
 /* Mobile nav */
 .mobile-nav-overlay {
@@ -714,16 +715,121 @@ button { cursor: pointer; border: none; }
 .order-id { font-weight: 800; color: var(--lime); font-size: 1.2rem; }
 
 /* ── Footer ──────────────────────────────────────────────────── */
-footer { background: var(--navy); color: #E8C4CC; padding: 48px 0 24px; margin-top: 80px; }
-.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
-.footer-brand .logo { margin-bottom: 12px; }
-.footer-brand p { font-size: .9rem; line-height: 1.7; }
-footer h4 { color: #fff; font-size: .95rem; margin-bottom: 16px; }
+footer {
+  background: #F8F8F8;
+  color: var(--text);
+  padding: 64px 0 0;
+  margin-top: 80px;
+  border-top: 1px solid #E5E5E5;
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 48px;
+}
+.footer-logo { display: block; margin-bottom: 14px; }
+.footer-brand p { font-size: .9rem; line-height: 1.7; color: #6B6B6B; max-width: 260px; }
+footer h4 {
+  color: var(--navy);
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
 footer ul { list-style: none; }
-footer ul li { margin-bottom: 8px; }
-footer ul li a { color: #E8C4CC; font-size: .9rem; transition: color .2s; }
-footer ul li a:hover { color: #fff; }
-.footer-bottom { border-top: 1px solid #5A1830; padding-top: 20px; text-align: center; font-size: .85rem; }
+footer ul li { margin-bottom: 10px; }
+footer ul li a { color: #555; font-size: .9rem; transition: color .2s; }
+footer ul li a:hover { color: var(--teal); }
+.footer-bottom {
+  border-top: 1px solid #E5E5E5;
+  padding: 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: .82rem;
+  color: #888;
+}
+.footer-trust-text {
+  font-size: .75rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #888;
+}
+
+/* ── Shop by Concern ──────────────────────────────────────────── */
+.concern-section { padding: 64px 0; background: #fff; }
+.concern-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.concern-card {
+  position: relative;
+  display: block;
+  aspect-ratio: 2/3;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #ddd;
+}
+.concern-card-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: transform .45s ease;
+}
+.concern-card-no-img { background: linear-gradient(135deg, var(--navy), var(--teal)); }
+.concern-card:hover .concern-card-bg { transform: scale(1.07); }
+.concern-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.68) 0%, rgba(0,0,0,.12) 55%, rgba(0,0,0,0) 100%);
+}
+.concern-card-text {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 32px 24px;
+  color: #fff;
+}
+.concern-card-label {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+.concern-card-tagline {
+  font-size: .88rem;
+  opacity: .85;
+  letter-spacing: .02em;
+}
+
+/* ── Products by Category rows ────────────────────────────────── */
+.cat-rows-section { padding: 64px 0; }
+.cat-row { margin-bottom: 52px; }
+.cat-row:last-child { margin-bottom: 0; }
+.cat-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.cat-row-title { font-size: 1.15rem; font-weight: 700; color: var(--navy); }
+.cat-row-see-all { font-size: .88rem; color: var(--teal); font-weight: 600; transition: color .2s; }
+.cat-row-see-all:hover { color: var(--teal-dark); }
+.cat-row-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scrollbar-width: none;
+}
+.cat-row-scroll::-webkit-scrollbar { display: none; }
+.cat-row-scroll .product-card { flex: 0 0 220px; min-width: 220px; }
 
 /* ── Shared Table Styles (also used by admin.css) ─────────────── */
 .admin-table-wrap { background: #fff; border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: 24px; }
@@ -914,7 +1020,9 @@ tbody tr:hover { background: #FFF7F9; }
 @media (max-width: 900px) {
   .product-detail-grid { grid-template-columns: 1fr; }
   .checkout-grid       { grid-template-columns: 1fr; }
-  .footer-grid         { grid-template-columns: 1fr; }
+  .footer-grid         { grid-template-columns: 1fr 1fr; gap: 28px; }
+  .concern-grid        { grid-template-columns: repeat(3, 200px); overflow-x: auto; }
+  .footer-bottom       { flex-direction: column; gap: 8px; text-align: center; }
 
   /* Hide desktop nav, show hamburger */
   .header-nav { display: none; }
@@ -982,9 +1090,11 @@ tbody tr:hover { background: #FFF7F9; }
   table         { font-size: .82rem; }
   thead th, tbody td { padding: 9px 12px; }
 
-  .footer-grid  { gap: 24px; }
-  footer        { padding: 36px 0 20px; }
+  .footer-grid  { grid-template-columns: 1fr; gap: 24px; }
+  footer        { padding: 40px 0 0; }
   .section      { padding: 40px 0; }
+  .concern-section { padding: 40px 0; }
+  .cat-rows-section { padding: 40px 0; }
 
   .hero { min-height: 60vh; }
   .hero h1 { font-size: 2rem; }
