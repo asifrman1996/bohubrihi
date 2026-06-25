@@ -220,8 +220,8 @@
       </div>
       <div class="pd-related-scroll">
         {% for p in related %}
-        <div class="product-card pd-related-card">
-          <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-img-wrap">
+        <div class="card pd-related-card">
+          <a href="{{ url_for('product_detail', pid=p.id) }}" class="card__media">
             {% if p.image %}
               <img src="{{ image_url(p.image) }}" alt="{{ p.name }}"
                    onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
@@ -231,13 +231,13 @@
             {% endif %}
             {% if p.original_price %}<span class="badge-sale">SALE</span>{% endif %}
           </a>
-          <div class="product-info">
-            <div class="product-cat">{{ p.category.name }}</div>
-            <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-name">{{ p.name }}</a>
+          <div class="card__body">
+            <div class="card__meta eyebrow">{{ p.category.name }}</div>
+            <a href="{{ url_for('product_detail', pid=p.id) }}" class="card__title">{{ p.name }}</a>
             {% if p.weight %}<div class="product-weight">{{ p.weight }}</div>{% endif %}
             <div class="product-footer">
               <div class="price-wrap">
-                <span class="price">{{ p.price|int }}</span>
+                <span class="card__price">৳{{ p.price|int }}</span>
                 {% if p.original_price %}<span class="original-price">{{ p.original_price|int }}</span>{% endif %}
               </div>
               <button class="add-cart-btn" onclick="addToCart({{ p.id }},'{{ p.name|replace("'","\\'") }}',{{ p.price }},'{{ p.image }}','{{ p.category.name }}')">+ Add</button>

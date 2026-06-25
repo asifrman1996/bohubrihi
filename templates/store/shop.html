@@ -43,8 +43,8 @@
     </div>
     <div class="product-grid">
       {% for b in bundles %}
-      <div class="product-card">
-        <a href="{{ url_for('bundle_detail', bid=b.id) }}" class="product-img-wrap">
+      <div class="card">
+        <a href="{{ url_for('bundle_detail', bid=b.id) }}" class="card__media">
           {% if b.image %}
             <img src="{{ image_url(b.image) }}" alt="{{ b.name }}">
           {% else %}
@@ -58,13 +58,13 @@
           {% if b.is_deal %}<span class="badge-deal">Bundle Deal</span>{% endif %}
           {% if b.savings > 0 %}<span class="badge-savings">Save ৳{{ b.savings|int }}</span>{% endif %}
         </a>
-        <div class="product-info">
-          <div class="product-cat">Bundle · {{ b.items|length }} item{{ 's' if b.items|length != 1 }}</div>
-          <a href="{{ url_for('bundle_detail', bid=b.id) }}" class="product-name">{{ b.name }}</a>
+        <div class="card__body">
+          <div class="card__meta eyebrow">Bundle · {{ b.items|length }} item{{ 's' if b.items|length != 1 }}</div>
+          <a href="{{ url_for('bundle_detail', bid=b.id) }}" class="card__title">{{ b.name }}</a>
           {% if b.description %}<div class="product-desc">{{ b.description }}</div>{% endif %}
           <div class="product-footer">
             <div class="price-wrap">
-              <span class="price">{{ b.price|int }}</span>
+              <span class="card__price">৳{{ b.price|int }}</span>
               {% if b.original_price > b.price %}<span class="original-price">{{ b.original_price|int }}</span>{% endif %}
             </div>
             <button class="add-cart-btn" onclick="addToCart({{ b.id }}, '{{ b.name|replace("'", "\\'") }}', {{ b.price }}, '{{ b.image }}', 'Bundle', 'bundle')">
@@ -81,8 +81,8 @@
   {% if products %}
   <div class="product-grid">
     {% for p in products %}
-    <div class="product-card">
-      <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-img-wrap">
+    <div class="card">
+      <a href="{{ url_for('product_detail', pid=p.id) }}" class="card__media">
         {% if p.image %}
           <img src="{{ image_url(p.image) }}" alt="{{ p.name }}">
         {% else %}
@@ -96,17 +96,17 @@
         {% if p.original_price %}<span class="badge-sale">SALE</span>{% endif %}
         {% if p.featured %}<span class="badge-feat">Featured</span>{% endif %}
       </a>
-      <div class="product-info">
-        <div class="product-cat">{{ p.category.name }}</div>
-        <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-name">{{ p.name }}</a>
+      <div class="card__body">
+        <div class="card__meta eyebrow">{{ p.category.name }}</div>
+        <a href="{{ url_for('product_detail', pid=p.id) }}" class="card__title">{{ p.name }}</a>
         {% if p.weight %}<div class="product-weight">{{ p.weight }}</div>{% endif %}
         {% if p.short_description %}<div class="product-desc">{{ p.short_description }}</div>{% endif %}
         <div class="product-footer">
           <div class="price-wrap">
             {% if p.variants %}
-              <span class="price">From ৳{{ p.variants|map(attribute='price')|min|int }}</span>
+              <span class="card__price">From ৳{{ p.variants|map(attribute='price')|min|int }}</span>
             {% else %}
-              <span class="price">{{ p.price|int }}</span>
+              <span class="card__price">৳{{ p.price|int }}</span>
               {% if p.original_price %}<span class="original-price">{{ p.original_price|int }}</span>{% endif %}
             {% endif %}
           </div>
@@ -127,7 +127,7 @@
     <div style="font-size:4rem; margin-bottom:16px;">🔍</div>
     <h3 style="color:var(--navy); margin-bottom:8px;">No products found</h3>
     <p>Try a different category or search term.</p>
-    <a href="{{ url_for('shop') }}" class="btn btn-primary" style="margin-top:20px; display:inline-flex;">View All Products</a>
+    <a href="{{ url_for('shop') }}" class="btn btn--primary" style="margin-top:20px; display:inline-flex;">View All Products</a>
   </div>
   {% endif %}
 </div>
