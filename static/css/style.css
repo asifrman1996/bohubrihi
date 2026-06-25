@@ -575,6 +575,7 @@ button { cursor: pointer; border: none; }
   align-items: flex-start;
   gap: var(--sp-3);
 }
+.hero__content .eyebrow { margin-bottom: 0; }
 .hero-eyebrow {
   font-size: .75rem;
   font-weight: 700;
@@ -1226,14 +1227,19 @@ tbody tr:hover { background: #FFF7F9; }
 
   /* Hero: tablet */
   .hero { min-height: 60vh; }
-  .hero__inner { justify-content: center; }
-  .hero__content { align-items: center; text-align: center; }
+  .hero__inner { display: flex; flex-direction: column; align-items: center; }
+  .hero__content { align-items: center; text-align: center; max-width: 640px; }
   .hero-overlay { background: rgba(60,13,30,.62); }
   .hero-inner { padding: 0 20px; display: flex; justify-content: center; }
   .hero-content { max-width: 100%; align-items: center; text-align: center; }
   .hero-headline { font-size: 2.2rem; }
   .hero-sub     { font-size: 1rem; }
   .hero-cta     { align-self: center; }
+
+  /* Tablet: reduce section padding */
+  .section { padding: 48px 0; }
+  .testimonials-section { padding: 48px 0; }
+  .bundle-deals-section { padding: 28px 0; }
 
   /* Hide desktop nav, show hamburger */
   .header-nav { display: none; }
@@ -1250,7 +1256,21 @@ tbody tr:hover { background: #FFF7F9; }
   .header-search    { display: none; }
   .header-search button { display: none; }
 
+  /* Trust strip: horizontal scroll on mobile */
+  .homepage-trust-strip {
+    overflow-x: auto;
+    white-space: nowrap;
+    text-align: left;
+    scrollbar-width: none;
+    padding: 11px 16px;
+  }
+  .homepage-trust-strip::-webkit-scrollbar { display: none; }
+
   .hero-headline { font-size: 1.9rem; }
+
+  /* Section headers */
+  .section-header { margin-bottom: 20px; }
+  .section-title  { font-size: 1.35rem; }
 
   .container    { padding: 0 12px; }
 
@@ -1261,6 +1281,9 @@ tbody tr:hover { background: #FFF7F9; }
     gap: 12px;
   }
 
+  /* Card body padding on mobile */
+  .card__body { padding: var(--sp-2); }
+  .card__title { font-size: 1.05rem; }
   .product-info { padding: 12px; }
 
   .product-footer {
@@ -1302,6 +1325,16 @@ tbody tr:hover { background: #FFF7F9; }
   .section      { padding: 40px 0; }
   .concern-section { padding: 40px 0; }
   .cat-rows-section { padding: 40px 0; }
+  .testimonials-section { padding: 40px 0; }
+  .bundle-deals-section { padding: 28px 0; }
+
+  /* Hero mobile refinements */
+  .hero__title { font-size: clamp(1.9rem, 8vw, 2.6rem); }
+  .hero__sub   { font-size: .95rem; }
+  .hero__content { gap: var(--sp-2); }
+
+  /* Body text slightly smaller on small screens */
+  body { font-size: .975rem; }
 
   .trust-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
 
