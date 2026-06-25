@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Admin – Bohubrihi{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v={{ cache_bust }}">
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='uploads/logo.png') }}?v={{ cache_bust }}">
+  <link rel="icon" type="image/png" href="{{ get_setting('logo_url') or (url_for('static', filename='uploads/logo.png') ~ '?v=' ~ cache_bust) }}">
 </head>
 <body>
 
@@ -18,7 +18,8 @@
     <!-- Brand -->
     <div class="sidebar-header">
       <div class="sidebar-brand">
-        <img src="{{ url_for('static', filename='uploads/logo.png') }}?v={{ cache_bust }}" alt="Bohubrihi" class="sidebar-logo-img"
+        {% set _logo_src = get_setting('logo_url') or (url_for('static', filename='uploads/logo.png') ~ '?v=' ~ cache_bust) %}
+        <img src="{{ _logo_src }}" alt="Bohubrihi" class="sidebar-logo-img"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
         <div class="sidebar-brand-fallback" style="display:none;">
           <div class="sidebar-brand-icon">B</div>

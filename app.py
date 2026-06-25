@@ -1063,22 +1063,27 @@ def admin_settings():
                 flash('Password updated successfully! Update ADMIN_PASSWORD_HASH in app.py to make it permanent.', 'success')
         elif action == 'upload_logo':
             f = request.files.get('logo')
-            if f and f.filename and f.filename.lower().endswith('.png'):
-                f.save(os.path.join(app.config['UPLOAD_FOLDER'], 'logo.png'))
-                flash('Logo updated! It may take a moment to show up everywhere due to browser caching.', 'success')
+            if f and f.filename:
+                url = save_uploaded_image(f)
+                if url:
+                    set_setting('logo_url', url)
+                    db.session.commit()
+                    flash('Logo updated successfully!', 'success')
+                else:
+                    flash('Upload failed. Check Supabase is configured and the file is a valid image (PNG, JPG, WEBP).', 'error')
             else:
-                flash('Please upload a PNG file.', 'error')
+                flash('Please select an image file.', 'error')
     total_products = Product.query.count()
     total_orders = Order.query.count()
     total_categories = Category.query.count()
     db_label = 'PostgreSQL (Supabase)' if os.environ.get('DATABASE_URL') else 'SQLite (bohubrihi.db)'
-    logo_exists = os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], 'logo.png'))
+    logo_url = get_setting('logo_url')
     return render_template('admin/settings.html',
                            total_products=total_products,
                            total_orders=total_orders,
                            total_categories=total_categories,
                            db_label=db_label,
-                           logo_exists=logo_exists)
+                           logo_url=logo_url)
 
 
 # ─── Site Settings: General ───────────────────────────────────────────────────

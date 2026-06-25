@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>{% block title %}Bohubrihi Organic Skincare{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_bust }}">
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='uploads/logo.png') }}?v={{ cache_bust }}">
+  <link rel="icon" type="image/png" href="{{ get_setting('logo_url') or (url_for('static', filename='uploads/logo.png') ~ '?v=' ~ cache_bust) }}">
   <!-- Meta Pixel Code -->
   <script>
   !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -45,8 +45,9 @@
   <div class="header-top">
     <div class="header-top-inner">
 
+      {% set _logo_src = get_setting('logo_url') or (url_for('static', filename='uploads/logo.png') ~ '?v=' ~ cache_bust) %}
       <a href="{{ url_for('index') }}" class="logo">
-        <img src="{{ url_for('static', filename='uploads/logo.png') }}?v={{ cache_bust }}"
+        <img src="{{ _logo_src }}"
              alt="Bohubrihi" class="logo-img"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
         <span class="logo-text" style="display:none;">Bohubrihi<span class="logo-dot">.</span><small>Organic Skincare</small></span>
