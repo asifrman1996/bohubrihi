@@ -23,9 +23,13 @@
 
       <!-- Image column -->
       <div class="pd-gallery">
+        {% set _pri_list = product_images|selectattr('is_primary')|list %}
+        {% set _main_img = _pri_list[0] if _pri_list else (product_images[0] if product_images else none) %}
+        {% set _main_src = _main_img.image_url if _main_img else image_url(product.image) %}
+
         <div class="pd-img-card" id="pdImgCard">
-          {% if product.image %}
-          <img class="pd-img-main" src="{{ image_url(product.image) }}" alt="{{ product.name }}"
+          {% if _main_src %}
+          <img class="pd-img-main" src="{{ _main_src }}" alt="{{ product.name }}"
                id="pdMainImg" onclick="openLightbox(this.src)" title="Click to enlarge">
           <button class="pd-zoom-hint" onclick="openLightbox(document.getElementById('pdMainImg').src)" aria-label="Enlarge image">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -39,6 +43,18 @@
           <div class="pd-img-placeholder">{{ product.category.icon }}</div>
           {% endif %}
         </div>
+
+        {% if product_images|length > 1 %}
+        <div class="pd-thumb-strip">
+          {% for img in product_images %}
+          <button type="button"
+                  class="pd-thumb{% if img.is_primary %} active{% endif %}"
+                  onclick="swapProductImage(this, '{{ img.image_url }}')">
+            <img src="{{ img.image_url }}" alt="View {{ loop.index }}">
+          </button>
+          {% endfor %}
+        </div>
+        {% endif %}
 
         <!-- Trust strip below image -->
         <div class="pd-img-trust">
@@ -357,6 +373,17 @@
     }
   }
 })();
+
+function swapProductImage(btn, url) {
+  document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const main = document.getElementById('pdMainImg');
+  if (main) {
+    main.style.opacity = '0';
+    main.style.transition = 'opacity .18s';
+    setTimeout(() => { main.src = url; main.style.opacity = '1'; }, 180);
+  }
+}
 
 function selectVariant(btn) {
   document.querySelectorAll('.variant-pill').forEach(p => p.classList.remove('active'));

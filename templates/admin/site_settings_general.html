@@ -80,6 +80,7 @@
         </div>
         <input type="file" name="hero_image_file" accept="image/*" id="heroImgInput"
                style="padding:10px; background:#f8fafc; border:2px dashed var(--border); border-radius:8px; width:100%;">
+        <p style="font-size:.76rem; color:var(--muted); margin:6px 0 0; font-style:italic;">JPG, PNG or WebP · Min 1920×700px · Max 5MB · 16:9 landscape ratio required</p>
         <div id="heroImgPreview" style="display:none; margin-top:10px; border-radius:8px; overflow:hidden; max-width:200px;">
           <img id="heroPreviewImg" src="" alt="Preview">
         </div>
@@ -124,16 +125,6 @@
 </form>
 
 <script>
-document.getElementById('heroImgInput').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      document.getElementById('heroPreviewImg').src = ev.target.result;
-      document.getElementById('heroImgPreview').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-  }
-});
+initCropperInput('heroImgInput', 'heroPreviewImg', 'heroImgPreview', 16/9, false);
 </script>
 {% endblock %}

@@ -46,6 +46,7 @@
         {% endif %}
         <input type="file" name="customer_photo" accept="image/*" id="photoInput"
                style="padding:10px; background:#f8fafc; border:2px dashed var(--border); border-radius:8px; width:100%;">
+        <p style="font-size:.76rem; color:var(--muted); margin:6px 0 0; font-style:italic;">JPG or PNG · Min 200×200px · Max 2MB · Square ratio recommended</p>
         <div id="photoPreview" style="display:none; margin-top:10px;">
           <img id="previewImg" src="" style="width:60px; height:60px; border-radius:50%; object-fit:cover;">
         </div>
@@ -71,16 +72,6 @@
 </div>
 
 <script>
-document.getElementById('photoInput').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      document.getElementById('previewImg').src = ev.target.result;
-      document.getElementById('photoPreview').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-  }
-});
+initCropperInput('photoInput', 'previewImg', 'photoPreview', 1, true);
 </script>
 {% endblock %}

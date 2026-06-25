@@ -86,18 +86,20 @@
       </div>
 
       <div class="form-group" style="grid-column:1/-1;">
+        {% if product %}
+        <label>Product Images</label>
+        <p style="font-size:.82rem; color:var(--muted); background:#f0fdfa; padding:10px 14px; border-radius:8px; border:1.5px solid #99f6e4; margin:0;">
+          Manage images in the <strong>Image Gallery</strong> section below ↓
+        </p>
+        {% else %}
         <label>Product Image</label>
-        {% if product and product.image %}
-        <div class="current-img-wrap">
-          <img src="{{ image_url(product.image) }}" style="width:80px; height:80px; border-radius:8px; object-fit:cover;">
-          <span style="font-size:.85rem; color:var(--muted);">Current image — upload a new one to replace</span>
+        <input type="file" name="image" accept="image/*" id="imgInput"
+               style="padding:10px; background:#f8fafc; border:2px dashed var(--border); border-radius:8px; width:100%;">
+        <p style="font-size:.76rem; color:var(--muted); margin:6px 0 0; font-style:italic;">JPG, PNG or WebP · Min 800×800px · Max 5MB · Square ratio recommended</p>
+        <div class="img-preview" id="imgPreview" style="display:none; margin-top:10px;">
+          <img id="previewImg" src="" alt="Preview" style="width:80px; height:80px; object-fit:cover; border-radius:8px;">
         </div>
         {% endif %}
-        <input type="file" name="image" accept="image/*" id="imgInput"
-               style="padding:10px; background:#f8fafc; border:2px dashed var(--border); border-radius:8px;">
-        <div class="img-preview" id="imgPreview" style="display:none;">
-          <img id="previewImg" src="" alt="Preview">
-        </div>
       </div>
 
       <div class="form-group" style="grid-column:1/-1;">
@@ -147,6 +149,48 @@
     </div>
   </form>
 </div>
+
+<!-- ── Product Image Gallery (edit mode only) ────────────────────── -->
+{% if product %}
+<div class="admin-form-card" style="margin-top:24px;">
+  <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;">
+    <h3 style="font-size:.95rem; font-weight:800; color:var(--navy);">Product Images</h3>
+    <span id="imgGalCount" style="font-size:.8rem; color:var(--muted);">{{ product.images|length }}/8</span>
+  </div>
+  <p style="font-size:.82rem; color:var(--muted); margin-bottom:6px;">
+    First image shown as main. Click ★ to set primary. Drag cards to reorder.
+  </p>
+  <p style="font-size:.76rem; color:var(--muted); margin-bottom:16px; font-style:italic;">
+    JPG, PNG or WebP · Min 800×800px · Max 5MB · Square ratio recommended
+  </p>
+
+  <div id="imgGalGrid" class="img-gal-grid">
+    {% for img in product.images %}
+    <div class="img-gal-card{% if img.is_primary %} is-primary{% endif %}" data-id="{{ img.id }}" draggable="true">
+      <img src="{{ img.image_url }}" alt="Product image">
+      <div class="img-gal-actions">
+        <button type="button" class="img-gal-star{% if img.is_primary %} active{% endif %}"
+                title="Set as primary" onclick="setPrimaryImage({{ img.id }}, this)">★</button>
+        <button type="button" class="img-gal-del" title="Delete"
+                onclick="deleteGalImage({{ img.id }}, this)">✕</button>
+      </div>
+      <div class="img-gal-drag">⠿</div>
+      {% if img.is_primary %}<div class="img-gal-primary-badge">Primary</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <div style="margin-top:14px;">
+    <input type="file" id="galFileInput" accept="image/*" style="display:none;">
+    <button type="button" id="addGalImgBtn"
+            onclick="document.getElementById('galFileInput').click()"
+            class="btn btn-teal" style="font-size:.88rem; padding:10px 20px;"
+            {% if product.images|length >= 8 %}disabled{% endif %}>
+      + Add Image
+    </button>
+  </div>
+</div>
+{% endif %}
 
 <!-- ── Product Variants (edit mode only) ─────────────────────────── -->
 {% if product %}
@@ -269,17 +313,9 @@ document.getElementById('productForm').addEventListener('submit', function () {
   document.getElementById('descInput').value = descQuill.root.innerHTML;
 });
 
-document.getElementById('imgInput').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      document.getElementById('previewImg').src = ev.target.result;
-      document.getElementById('imgPreview').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-  }
-});
+{% if not product %}
+initCropperInput('imgInput', 'previewImg', 'imgPreview', 1, false);
+{% endif %}
 
 function submitFaq(pid) {
   const q = document.getElementById('newFaqQ').value.trim();
@@ -295,4 +331,121 @@ function submitFaq(pid) {
   form.submit();
 }
 </script>
+
+{% if product %}
+{% block extra_scripts %}
+<script>
+const _PID = {{ product.id }};
+var _dragSrc = null;
+
+function _initDrag(el) {
+  el.addEventListener('dragstart', function(e) {
+    _dragSrc = this; e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => this.style.opacity = '0.4', 0);
+  });
+  el.addEventListener('dragend',  function() {
+    this.style.opacity = '1';
+    document.querySelectorAll('.img-gal-card').forEach(c => c.classList.remove('drag-over'));
+  });
+  el.addEventListener('dragover', function(e) {
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+    document.querySelectorAll('.img-gal-card').forEach(c => c.classList.remove('drag-over'));
+    if (this !== _dragSrc) this.classList.add('drag-over');
+  });
+  el.addEventListener('drop', function(e) {
+    e.preventDefault();
+    if (_dragSrc && _dragSrc !== this) {
+      const grid = document.getElementById('imgGalGrid');
+      const cards = [...grid.querySelectorAll('.img-gal-card')];
+      const si = cards.indexOf(_dragSrc), di = cards.indexOf(this);
+      grid.insertBefore(_dragSrc, si < di ? this.nextSibling : this);
+      _saveReorder();
+    }
+  });
+}
+
+function _saveReorder() {
+  const cards = [...document.querySelectorAll('.img-gal-card')];
+  const payload = cards.map((c, i) => ({ id: parseInt(c.dataset.id), sort_order: i }));
+  fetch('/admin/products/' + _PID + '/images/reorder', {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+  });
+}
+
+function _updateCount() {
+  const n = document.querySelectorAll('.img-gal-card').length;
+  document.getElementById('imgGalCount').textContent = n + '/8';
+  document.getElementById('addGalImgBtn').disabled = n >= 8;
+}
+
+function setPrimaryImage(iid, btn) {
+  fetch('/admin/products/' + _PID + '/images/' + iid + '/primary', { method: 'POST' })
+    .then(r => r.json()).then(d => {
+      if (!d.success) return;
+      document.querySelectorAll('.img-gal-card').forEach(c => {
+        c.classList.remove('is-primary');
+        c.querySelector('.img-gal-primary-badge')?.remove();
+        c.querySelector('.img-gal-star')?.classList.remove('active');
+      });
+      const card = btn.closest('.img-gal-card');
+      card.classList.add('is-primary');
+      btn.classList.add('active');
+      const b = document.createElement('div');
+      b.className = 'img-gal-primary-badge'; b.textContent = 'Primary';
+      card.appendChild(b);
+    });
+}
+
+function deleteGalImage(iid, btn) {
+  if (!confirm('Delete this image?')) return;
+  const card = btn.closest('.img-gal-card');
+  fetch('/admin/products/' + _PID + '/images/' + iid + '/delete', { method: 'POST' })
+    .then(r => r.json()).then(d => {
+      if (d.success) { card.remove(); _updateCount(); }
+    });
+}
+
+function _addCardToGrid(img) {
+  const grid = document.getElementById('imgGalGrid');
+  const div  = document.createElement('div');
+  div.className = 'img-gal-card' + (img.is_primary ? ' is-primary' : '');
+  div.dataset.id = img.id;
+  div.setAttribute('draggable', 'true');
+  div.innerHTML =
+    '<img src="' + img.image_url + '" alt="Product image">' +
+    '<div class="img-gal-actions">' +
+      '<button type="button" class="img-gal-star' + (img.is_primary ? ' active' : '') + '" ' +
+              'title="Set as primary" onclick="setPrimaryImage(' + img.id + ', this)">★</button>' +
+      '<button type="button" class="img-gal-del" title="Delete" ' +
+              'onclick="deleteGalImage(' + img.id + ', this)">✕</button>' +
+    '</div>' +
+    '<div class="img-gal-drag">⠿</div>' +
+    (img.is_primary ? '<div class="img-gal-primary-badge">Primary</div>' : '');
+  _initDrag(div);
+  grid.appendChild(div);
+}
+
+document.getElementById('galFileInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  this.value = '';
+  openCropperModal(file, 1, function(blob) {
+    const btn = document.getElementById('addGalImgBtn');
+    btn.disabled = true; btn.textContent = 'Uploading…';
+    const fd = new FormData();
+    fd.append('image', new File([blob], 'product-image.jpg', { type: 'image/jpeg' }));
+    fetch('/admin/products/' + _PID + '/images/upload', { method: 'POST', body: fd })
+      .then(r => r.json()).then(d => {
+        btn.textContent = '+ Add Image';
+        if (d.success) { _addCardToGrid(d.image); _updateCount(); }
+        else           { alert(d.error || 'Upload failed'); btn.disabled = false; }
+      }).catch(() => { btn.textContent = '+ Add Image'; btn.disabled = false; alert('Network error'); });
+  });
+});
+
+document.querySelectorAll('.img-gal-card').forEach(_initDrag);
+</script>
+{% endblock %}
+{% endif %}
+
 {% endblock %}

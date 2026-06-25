@@ -61,8 +61,12 @@
       <input type="hidden" name="action" value="upload_logo">
       <div class="form-group" style="margin-bottom:14px;">
         <label style="display:block; font-size:.82rem; font-weight:600; color:var(--navy); margin-bottom:6px;">Image File (PNG, JPG, WEBP)</label>
-        <input type="file" name="logo" accept="image/*" required
+        <input type="file" name="logo" accept="image/*" required id="logoFileInput"
                style="width:100%; padding:10px; background:#f8fafc; border:2px dashed var(--border); border-radius:8px;">
+        <p style="font-size:.76rem; color:var(--muted); margin:6px 0 0; font-style:italic;">PNG recommended · Transparent background · Max 2MB · Any ratio</p>
+        <div id="logoPreviewWrap" style="display:none; margin-top:10px;">
+          <img id="logoPreviewImg" src="" style="height:45px; max-width:140px; object-fit:contain; border-radius:4px;">
+        </div>
       </div>
       <button type="submit" class="btn btn-teal" style="width:100%; justify-content:center;">Upload Logo</button>
     </form>
@@ -99,4 +103,10 @@
   </div>
 
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+initCropperInput('logoFileInput', 'logoPreviewImg', 'logoPreviewWrap', NaN, false);
+</script>
 {% endblock %}

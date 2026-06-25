@@ -402,6 +402,70 @@ tbody tr:hover { background: #fafcff; }
 .img-preview img { width: 100%; }
 .current-img-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
 
+/* ── Image Gallery Manager ───────────────────────── */
+.img-gal-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-height: 20px;
+}
+.img-gal-card {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  cursor: grab;
+  transition: border-color .15s, box-shadow .15s;
+  user-select: none;
+}
+.img-gal-card:active { cursor: grabbing; }
+.img-gal-card img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+  pointer-events: none;
+}
+.img-gal-card.is-primary { border-color: var(--teal); box-shadow: 0 0 0 2px rgba(194,56,90,.2); }
+.img-gal-card.drag-over  { border-color: var(--lime); box-shadow: 0 0 0 3px rgba(201,168,64,.35); }
+.img-gal-actions {
+  position: absolute;
+  top: 4px; right: 4px;
+  display: flex; gap: 4px;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.img-gal-card:hover .img-gal-actions { opacity: 1; }
+.img-gal-star, .img-gal-del {
+  width: 26px; height: 26px;
+  border: none; border-radius: 6px;
+  cursor: pointer; font-size: .85rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.img-gal-star         { background: rgba(255,255,255,.9); color: #aaa; }
+.img-gal-star:hover   { background: #fff; color: var(--lime); }
+.img-gal-star.active  { background: #fff; color: var(--lime); }
+.img-gal-del          { background: rgba(255,255,255,.9); color: #aaa; }
+.img-gal-del:hover    { background: #fee2e2; color: #dc2626; }
+.img-gal-drag {
+  position: absolute;
+  bottom: 4px; left: 4px;
+  font-size: .9rem; color: rgba(255,255,255,.8);
+  text-shadow: 0 1px 2px rgba(0,0,0,.4);
+  line-height: 1; pointer-events: none;
+}
+.img-gal-primary-badge {
+  position: absolute;
+  bottom: 4px; right: 4px;
+  background: var(--teal);
+  color: #fff;
+  font-size: .62rem; font-weight: 700;
+  padding: 2px 6px; border-radius: 5px;
+  letter-spacing: .05em;
+  pointer-events: none;
+}
+
 /* ── Bundle Product Picker ───────────────────────── */
 .bundle-picker { position: relative; margin-bottom: 12px; }
 .bundle-picker input {

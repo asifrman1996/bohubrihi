@@ -87,6 +87,9 @@ class Product(db.Model):
     variants = db.relationship('ProductVariant', lazy=True,
                                order_by='ProductVariant.sort_order',
                                cascade='all, delete-orphan')
+    images = db.relationship('ProductImage', lazy=True,
+                             order_by='ProductImage.sort_order',
+                             cascade='all, delete-orphan')
 
 
 class Review(db.Model):
@@ -218,6 +221,16 @@ class ProductVariant(db.Model):
     original_price = db.Column(db.Float, nullable=True)
     in_stock       = db.Column(db.Boolean, default=True)
     sort_order     = db.Column(db.Integer, default=0)
+
+
+class ProductImage(db.Model):
+    __tablename__ = 'product_images'
+    id         = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    image_url  = db.Column(db.String(500), nullable=False)
+    sort_order = db.Column(db.Integer, default=0)
+    is_primary = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 SLACK_BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN', '')
@@ -518,6 +531,7 @@ def shop():
 def product_detail(pid):
     product = Product.query.get_or_404(pid)
     variants = ProductVariant.query.filter_by(product_id=pid).order_by(ProductVariant.sort_order).all()
+    product_images = ProductImage.query.filter_by(product_id=pid).order_by(ProductImage.sort_order).all()
     related = Product.query.filter_by(category_id=product.category_id, in_stock=True)\
                            .filter(Product.id != pid).limit(4).all()
     reviews = Review.query.filter_by(product_id=pid, approved=True)\
@@ -525,7 +539,8 @@ def product_detail(pid):
     avg_rating = round(sum(r.rating for r in reviews) / len(reviews), 1) if reviews else None
     faqs = ProductFAQ.query.filter_by(product_id=pid).order_by(ProductFAQ.sort_order).all()
     return render_template('store/product.html', product=product, variants=variants,
-                           related=related, reviews=reviews, avg_rating=avg_rating, faqs=faqs)
+                           product_images=product_images, related=related,
+                           reviews=reviews, avg_rating=avg_rating, faqs=faqs)
 
 
 @app.route('/bundle/<int:bid>')
@@ -820,6 +835,8 @@ def admin_edit_product(pid):
 def admin_delete_product(pid):
     product = Product.query.get_or_404(pid)
     delete_uploaded_image(product.image)
+    for img in product.images:
+        delete_uploaded_image(img.image_url)
     name = product.name
     db.session.delete(product)
     db.session.commit()
@@ -1466,6 +1483,73 @@ def admin_delete_product_variant(pid, vid):
     db.session.commit()
     flash('Variant deleted.', 'success')
     return redirect(url_for('admin_edit_product', pid=pid))
+
+
+@app.route('/admin/products/<int:pid>/images/upload', methods=['POST'])
+@admin_required
+def admin_upload_product_image(pid):
+    product = Product.query.get_or_404(pid)
+    count = ProductImage.query.filter_by(product_id=pid).count()
+    if count >= 8:
+        return jsonify({'success': False, 'error': 'Maximum 8 images per product'})
+    f = request.files.get('image')
+    url = save_uploaded_image(f)
+    if not url:
+        return jsonify({'success': False, 'error': 'Upload failed — check Supabase configuration'})
+    is_primary = count == 0
+    img = ProductImage(product_id=pid, image_url=url, sort_order=count, is_primary=is_primary)
+    db.session.add(img)
+    if is_primary:
+        product.image = url
+    db.session.commit()
+    return jsonify({'success': True, 'image': {
+        'id': img.id, 'image_url': img.image_url,
+        'is_primary': img.is_primary, 'sort_order': img.sort_order,
+    }})
+
+
+@app.route('/admin/products/<int:pid>/images/<int:iid>/delete', methods=['POST'])
+@admin_required
+def admin_delete_product_image(pid, iid):
+    img = ProductImage.query.filter_by(id=iid, product_id=pid).first_or_404()
+    was_primary = img.is_primary
+    delete_uploaded_image(img.image_url)
+    db.session.delete(img)
+    db.session.commit()
+    if was_primary:
+        first = ProductImage.query.filter_by(product_id=pid).order_by(ProductImage.sort_order).first()
+        if first:
+            first.is_primary = True
+            product = Product.query.get(pid)
+            if product:
+                product.image = first.image_url
+            db.session.commit()
+    return jsonify({'success': True})
+
+
+@app.route('/admin/products/<int:pid>/images/<int:iid>/primary', methods=['POST'])
+@admin_required
+def admin_set_primary_product_image(pid, iid):
+    ProductImage.query.filter_by(product_id=pid).update({'is_primary': False})
+    img = ProductImage.query.filter_by(id=iid, product_id=pid).first_or_404()
+    img.is_primary = True
+    product = Product.query.get(pid)
+    if product:
+        product.image = img.image_url
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+@app.route('/admin/products/<int:pid>/images/reorder', methods=['POST'])
+@admin_required
+def admin_reorder_product_images(pid):
+    data = request.get_json() or []
+    for item in data:
+        img = ProductImage.query.filter_by(id=item.get('id'), product_id=pid).first()
+        if img:
+            img.sort_order = item.get('sort_order', 0)
+    db.session.commit()
+    return jsonify({'success': True})
 
 
 with app.app_context():

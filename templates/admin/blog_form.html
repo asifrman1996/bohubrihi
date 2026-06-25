@@ -47,6 +47,7 @@
       {% endif %}
       <input type="file" name="cover_image" accept="image/*" id="coverInput"
              style="padding:10px; background:#f8fafc; border:2px dashed var(--border); border-radius:8px; width:100%;">
+      <p style="font-size:.76rem; color:var(--muted); margin:6px 0 0; font-style:italic;">JPG or PNG · Min 1200×630px · Max 5MB · 16:9 ratio recommended</p>
       <div id="coverPreview" style="display:none; margin-top:10px; border-radius:8px; overflow:hidden; max-width:260px;">
         <img id="coverImg" src="" alt="Preview">
       </div>
@@ -99,17 +100,6 @@ document.getElementById('blogForm').addEventListener('submit', function () {
   document.getElementById('bodyInput').value = quill.root.innerHTML;
 });
 
-// Cover image preview
-document.getElementById('coverInput').addEventListener('change', function (e) {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      document.getElementById('coverImg').src = ev.target.result;
-      document.getElementById('coverPreview').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-  }
-});
+initCropperInput('coverInput', 'coverImg', 'coverPreview', 16/9, false);
 </script>
 {% endblock %}
