@@ -48,6 +48,12 @@ class Category(db.Model):
     products = db.relationship('Product', backref='category', lazy=True)
 
 
+product_ingredients = db.Table('product_ingredients',
+    db.Column('product_id',   db.Integer, db.ForeignKey('product.id'),     primary_key=True),
+    db.Column('ingredient_id', db.Integer, db.ForeignKey('ingredients.id'), primary_key=True),
+)
+
+
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
@@ -62,6 +68,8 @@ class Product(db.Model):
     weight = db.Column(db.String(50), default='')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     reviews = db.relationship('Review', backref='product', lazy=True)
+    linked_ingredients = db.relationship('Ingredient', secondary=product_ingredients,
+                                         lazy='subquery', backref=db.backref('products', lazy=True))
 
 
 class Review(db.Model):
@@ -173,6 +181,15 @@ class Ingredient(db.Model):
     source      = db.Column(db.String(200), default='')
     image       = db.Column(db.String(300), default='')
     created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class ProductFAQ(db.Model):
+    __tablename__ = 'product_faqs'
+    id         = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    question   = db.Column(db.String(400), nullable=False)
+    answer     = db.Column(db.Text, nullable=False)
+    sort_order = db.Column(db.Integer, default=0)
 
 
 SLACK_BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN', '')
@@ -479,16 +496,12 @@ def product_detail(pid):
     product = Product.query.get_or_404(pid)
     related = Product.query.filter_by(category_id=product.category_id, in_stock=True)\
                            .filter(Product.id != pid).limit(4).all()
-    complementary = Product.query.filter(
-        Product.category_id != product.category_id,
-        Product.in_stock == True,
-        Product.featured == True
-    ).limit(3).all()
     reviews = Review.query.filter_by(product_id=pid, approved=True)\
                           .order_by(Review.created_at.desc()).all()
     avg_rating = round(sum(r.rating for r in reviews) / len(reviews), 1) if reviews else None
+    faqs = ProductFAQ.query.filter_by(product_id=pid).order_by(ProductFAQ.sort_order).all()
     return render_template('store/product.html', product=product, related=related,
-                           complementary=complementary, reviews=reviews, avg_rating=avg_rating)
+                           reviews=reviews, avg_rating=avg_rating, faqs=faqs)
 
 
 @app.route('/bundle/<int:bid>')
@@ -711,6 +724,7 @@ def admin_products():
 @admin_required
 def admin_add_product():
     categories = Category.query.order_by(Category.sort_order).all()
+    all_ingredients = Ingredient.query.order_by(Ingredient.name).all()
     if request.method == 'POST':
         image_filename = save_uploaded_image(request.files.get('image'))
         orig = request.form.get('original_price', '').strip()
@@ -727,10 +741,17 @@ def admin_add_product():
             weight=request.form.get('weight', ''),
         )
         db.session.add(product)
+        db.session.flush()
+        ingredient_ids = request.form.getlist('ingredient_ids')
+        if ingredient_ids:
+            product.linked_ingredients = Ingredient.query.filter(
+                Ingredient.id.in_([int(i) for i in ingredient_ids])
+            ).all()
         db.session.commit()
         flash(f'"{product.name}" added successfully!', 'success')
         return redirect(url_for('admin_products'))
-    return render_template('admin/product_form.html', product=None, categories=categories)
+    return render_template('admin/product_form.html', product=None, categories=categories,
+                           all_ingredients=all_ingredients, faqs=[])
 
 
 @app.route('/admin/products/edit/<int:pid>', methods=['GET', 'POST'])
@@ -738,6 +759,7 @@ def admin_add_product():
 def admin_edit_product(pid):
     product = Product.query.get_or_404(pid)
     categories = Category.query.order_by(Category.sort_order).all()
+    all_ingredients = Ingredient.query.order_by(Ingredient.name).all()
     if request.method == 'POST':
         f = request.files.get('image')
         if f and f.filename:
@@ -755,10 +777,16 @@ def admin_edit_product(pid):
         product.featured = bool(request.form.get('featured'))
         product.ingredients = request.form.get('ingredients', '')
         product.weight = request.form.get('weight', '')
+        ingredient_ids = request.form.getlist('ingredient_ids')
+        product.linked_ingredients = Ingredient.query.filter(
+            Ingredient.id.in_([int(i) for i in ingredient_ids])
+        ).all() if ingredient_ids else []
         db.session.commit()
         flash(f'"{product.name}" updated successfully!', 'success')
         return redirect(url_for('admin_products'))
-    return render_template('admin/product_form.html', product=product, categories=categories)
+    faqs = ProductFAQ.query.filter_by(product_id=pid).order_by(ProductFAQ.sort_order).all()
+    return render_template('admin/product_form.html', product=product, categories=categories,
+                           all_ingredients=all_ingredients, faqs=faqs)
 
 
 @app.route('/admin/products/delete/<int:pid>', methods=['POST'])
@@ -1327,6 +1355,35 @@ def admin_delete_ingredient(iid):
     db.session.commit()
     flash(f'"{name}" deleted.', 'success')
     return redirect(url_for('admin_ingredients'))
+
+
+# ─── Product FAQs ─────────────────────────────────────────────────────────────
+
+@app.route('/admin/products/<int:pid>/faqs/add', methods=['POST'])
+@admin_required
+def admin_add_product_faq(pid):
+    Product.query.get_or_404(pid)
+    q = request.form.get('question', '').strip()
+    a = request.form.get('answer', '').strip()
+    if q and a:
+        count = ProductFAQ.query.filter_by(product_id=pid).count()
+        faq = ProductFAQ(product_id=pid, question=q, answer=a, sort_order=count)
+        db.session.add(faq)
+        db.session.commit()
+        flash('FAQ added.', 'success')
+    else:
+        flash('Question and answer are both required.', 'error')
+    return redirect(url_for('admin_edit_product', pid=pid))
+
+
+@app.route('/admin/products/<int:pid>/faqs/<int:fid>/delete', methods=['POST'])
+@admin_required
+def admin_delete_product_faq(pid, fid):
+    faq = ProductFAQ.query.filter_by(id=fid, product_id=pid).first_or_404()
+    db.session.delete(faq)
+    db.session.commit()
+    flash('FAQ deleted.', 'success')
+    return redirect(url_for('admin_edit_product', pid=pid))
 
 
 with app.app_context():

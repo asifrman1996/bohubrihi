@@ -2,255 +2,308 @@
 {% block title %}{{ product.name }} – Bohubrihi{% endblock %}
 
 {% block content %}
-<div class="container product-detail">
-  <!-- Breadcrumb -->
-  <div style="margin-bottom:24px; font-size:.85rem; color:var(--muted);">
-    <a href="{{ url_for('index') }}" style="color:var(--teal);">Home</a> /
-    <a href="{{ url_for('shop') }}" style="color:var(--teal);">Shop</a> /
-    <a href="{{ url_for('shop') }}?category={{ product.category.slug }}" style="color:var(--teal);">{{ product.category.name }}</a> /
-    {{ product.name }}
+<div class="pd-page">
+
+  <!-- ── Breadcrumb ─────────────────────────────────────────────── -->
+  <div class="container">
+    <nav class="pd-breadcrumb">
+      <a href="{{ url_for('index') }}">Home</a>
+      <span>/</span>
+      <a href="{{ url_for('shop') }}">Shop</a>
+      <span>/</span>
+      <a href="{{ url_for('shop') }}?category={{ product.category.slug }}">{{ product.category.name }}</a>
+      <span>/</span>
+      <span>{{ product.name }}</span>
+    </nav>
   </div>
 
-  <div class="product-detail-grid">
-    <!-- Image -->
-    <div>
-      <div class="product-detail-img">
-        {% if product.image %}
-          <img src="{{ image_url(product.image) }}" alt="{{ product.name }}">
-        {% else %}
-          {{ product.category.icon }}
-        {% endif %}
-      </div>
-    </div>
+  <!-- ── Two-column: Image + Info ───────────────────────────────── -->
+  <div class="container">
+    <div class="pd-layout">
 
-    <!-- Info -->
-    <div class="product-detail-info">
-      <div class="cat-label">{{ product.category.icon }} {{ product.category.name }}</div>
-      <h1>{{ product.name }}</h1>
-      {% if avg_rating %}
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-        <span style="color:#f59e0b; font-size:1.1rem; letter-spacing:1px;">
-          {% for i in range(1, 6) %}{{ '★' if i <= avg_rating|round else '☆' }}{% endfor %}
-        </span>
-        <span style="color:var(--muted); font-size:.88rem;">{{ avg_rating }} · {{ reviews|length }} review{{ 's' if reviews|length != 1 }}</span>
-      </div>
-      {% endif %}
-      <div class="detail-price">{{ product.price|int }}</div>
-      {% if product.original_price %}
-        <div class="detail-orig">{{ product.original_price|int }}
-          <span style="color:var(--red); text-decoration:none; font-size:.85rem;">
-            (Save ৳{{ (product.original_price - product.price)|int }})
-          </span>
-        </div>
-      {% endif %}
-
-      <p class="detail-desc">{{ product.description }}</p>
-
-      <div class="detail-meta">
-        {% if product.weight %}
-        <p><strong>Size / Weight:</strong> {{ product.weight }}</p>
-        {% endif %}
-        <p><strong>Status:</strong>
-          {% if product.in_stock %}
-            <span class="badge badge-green">✓ In Stock</span>
+      <!-- Image column -->
+      <div class="pd-gallery">
+        <div class="pd-img-card" id="pdImgCard">
+          {% if product.image %}
+          <img class="pd-img-main" src="{{ image_url(product.image) }}" alt="{{ product.name }}"
+               id="pdMainImg" onclick="openLightbox(this.src)" title="Click to enlarge">
+          <button class="pd-zoom-hint" onclick="openLightbox(document.getElementById('pdMainImg').src)" aria-label="Enlarge image">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+            </svg>
+            Enlarge
+          </button>
           {% else %}
-            <span class="badge badge-red">Out of Stock</span>
+          <div class="pd-img-placeholder">{{ product.category.icon }}</div>
           {% endif %}
-        </p>
-        {% if product.ingredients %}
-        <p><strong>Ingredients:</strong> <span style="color:var(--muted); font-size:.88rem;">{{ product.ingredients }}</span></p>
+        </div>
+
+        <!-- Trust strip below image -->
+        <div class="pd-img-trust">
+          <span>🔒 Secure checkout</span>
+          <span>🌱 100% Organic</span>
+          <span>🚚 Fast shipping</span>
+        </div>
+      </div>
+
+      <!-- Info column -->
+      <div class="pd-info">
+        <div class="pd-cat-label">{{ product.category.icon }} {{ product.category.name }}</div>
+        <h1 class="pd-name">{{ product.name }}</h1>
+
+        {% if avg_rating %}
+        <div class="pd-rating-row">
+          <span class="pd-stars">
+            {% for i in range(1, 6) %}{{ '★' if i <= avg_rating|round else '☆' }}{% endfor %}
+          </span>
+          <span class="pd-rating-text">{{ avg_rating }} · {{ reviews|length }} review{{ 's' if reviews|length != 1 }}</span>
+        </div>
         {% endif %}
-      </div>
 
-      {% if product.in_stock %}
-      <div class="qty-row">
-        <div class="qty-large">
-          <button class="qty-btn" id="detailQtyMinus">−</button>
-          <span class="qty-num" id="detailQty">1</span>
-          <button class="qty-btn" id="detailQtyPlus">+</button>
+        {% if product.weight %}
+        <div class="pd-weight">{{ product.weight }}</div>
+        {% endif %}
+
+        <!-- Price -->
+        <div class="pd-price-row">
+          <span class="pd-price">৳{{ product.price|int }}</span>
+          {% if product.original_price %}
+          <span class="pd-orig-price">৳{{ product.original_price|int }}</span>
+          <span class="pd-savings">Save ৳{{ (product.original_price - product.price)|int }}</span>
+          {% endif %}
         </div>
-        <button class="btn-add-large" onclick="
-          const qty = parseInt(document.getElementById('detailQty').textContent);
-          for(let i=0;i<qty;i++) addToCart({{ product.id }}, '{{ product.name|replace("'", "\\'") }}', {{ product.price }}, '{{ product.image }}', '{{ product.category.name }}');
-        ">
-          🛒 Add to Cart
-        </button>
-      </div>
-      {% else %}
-      <div style="padding:14px; background:#fee2e2; border-radius:10px; color:#991b1b; font-weight:600;">
-        Currently out of stock — check back soon!
-      </div>
-      {% endif %}
 
-      {% if related %}
-      <div style="margin-top:16px; padding:14px 16px; background:linear-gradient(135deg,#fef9c3,#fef3c7);
-                  border:1px solid #fcd34d; border-radius:12px;">
-        <strong style="color:#92400e;">🎁 Bundle Deal</strong>
-        <span style="color:#78350f; display:block; margin-top:4px; font-size:.88rem;">
-          Add 3 or more <strong>{{ product.category.name }}</strong> items to your cart and get <strong>10% off</strong> that category automatically at checkout.
-        </span>
-      </div>
-      {% endif %}
-
-      <div style="margin-top:16px; padding:16px; background:#f0fdfa; border-radius:12px;">
-        <div style="display:flex; gap:24px; flex-wrap:wrap;">
-          <span style="font-size:.85rem; color:var(--teal-dark);">🚚 Free delivery over ৳2500</span>
-          <span style="font-size:.85rem; color:var(--teal-dark);">🌱 100% Organic</span>
-          <span style="font-size:.85rem; color:var(--teal-dark);">✅ Cruelty Free</span>
+        <!-- Short description -->
+        <div class="pd-short-desc">
+          {% set _desc = product.description %}
+          {% if _desc|length > 200 %}
+            <p id="pdDescShort">{{ _desc[:200] }}<span id="pdDescEllipsis">… <button class="pd-read-more" onclick="expandDesc()">Read more</button></span></p>
+            <p id="pdDescFull" style="display:none;">{{ _desc }}</p>
+          {% else %}
+            <p>{{ _desc }}</p>
+          {% endif %}
         </div>
+
+        <!-- Add to cart -->
+        {% if product.in_stock %}
+        <div class="pd-cart-row">
+          <div class="pd-qty">
+            <button class="pd-qty-btn" id="pdMinus">−</button>
+            <span class="pd-qty-num" id="pdQty">1</span>
+            <button class="pd-qty-btn" id="pdPlus">+</button>
+          </div>
+          <button class="pd-add-btn" onclick="
+            const qty = parseInt(document.getElementById('pdQty').textContent);
+            for(let i=0;i<qty;i++) addToCart({{ product.id }},'{{ product.name|replace("'","\\'") }}',{{ product.price }},'{{ product.image }}','{{ product.category.name }}');
+          ">
+            🛒 Add to Cart
+          </button>
+        </div>
+
+        <!-- Bundle nudge -->
+        <div class="pd-bundle-nudge">
+          🎁 Add 3+ items from <strong>{{ product.category.name }}</strong> — get <strong>10% off</strong> automatically.
+        </div>
+
+        <!-- Trust badges -->
+        <div class="pd-trust-row">
+          <div class="pd-trust-item"><span>🌿</span><span>Organic<br>Certified</span></div>
+          <div class="pd-trust-item"><span>🧪</span><span>No<br>Chemicals</span></div>
+          <div class="pd-trust-item"><span>💚</span><span>Cruelty<br>Free</span></div>
+          <div class="pd-trust-item"><span>🇧🇩</span><span>Made in<br>Bangladesh</span></div>
+        </div>
+        {% else %}
+        <div class="pd-out-of-stock">
+          Currently out of stock — check back soon!
+        </div>
+        {% endif %}
       </div>
     </div>
   </div>
 
-  <!-- Reviews -->
-  <div style="margin-top:60px;">
-    <h2 class="section-title" style="margin-bottom:28px;">Customer <span>Reviews</span></h2>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% for cat, msg in messages %}
-        <div style="padding:12px 16px; border-radius:10px; margin-bottom:16px;
-                    background:{{ '#f0fdfa' if cat=='success' else '#fef2f2' }};
-                    color:{{ '#0f766e' if cat=='success' else '#b91c1c' }}; font-weight:600;">
-          {{ msg }}
+  <!-- ── Key Ingredients ────────────────────────────────────────── -->
+  {% if product.linked_ingredients %}
+  <section class="pd-ingredients-section">
+    <div class="container">
+      <h2 class="pd-section-title">Key <span>Ingredients</span></h2>
+      <div class="pd-ingredients-scroll">
+        {% for ing in product.linked_ingredients %}
+        <div class="pd-ingredient-card">
+          {% if ing.image %}
+          <div class="pd-ingredient-img" style="background-image:url('{{ image_url(ing.image) }}')"></div>
+          {% else %}
+          <div class="pd-ingredient-img pd-ingredient-img-empty">🌿</div>
+          {% endif %}
+          <div class="pd-ingredient-info">
+            <h4>{{ ing.name }}</h4>
+            {% if ing.benefits %}<p>{{ ing.benefits[:80] }}{% if ing.benefits|length > 80 %}…{% endif %}</p>{% endif %}
+          </div>
         </div>
-      {% endfor %}
-    {% endwith %}
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
 
-    <div class="reviews-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:start;">
+  <!-- ── Full Description ───────────────────────────────────────── -->
+  {% if product.description %}
+  <section class="pd-desc-section">
+    <div class="container">
+      <div class="pd-desc-inner">
+        <div class="pd-desc-text">
+          <h2 class="pd-section-title">About This <span>Product</span></h2>
+          <div class="pd-desc-body">{{ product.description }}</div>
+          {% if product.ingredients %}
+          <div class="pd-ingredients-text">
+            <strong>Ingredients:</strong> {{ product.ingredients }}
+          </div>
+          {% endif %}
+        </div>
+        {% if product.image %}
+        <div class="pd-desc-img">
+          <img src="{{ image_url(product.image) }}" alt="{{ product.name }}">
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
 
-      <!-- Review list -->
-      <div>
-        {% if reviews %}
-          {% for r in reviews %}
-          <div style="background:#fff; border-radius:14px; padding:20px; margin-bottom:16px; box-shadow:var(--shadow);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <strong style="color:var(--navy);">{{ r.customer_name }}</strong>
-              <span style="color:#f59e0b; font-size:1rem; letter-spacing:1px;">
-                {% for i in range(1, 6) %}{{ '★' if i <= r.rating else '☆' }}{% endfor %}
-              </span>
-            </div>
-            {% if r.comment %}
-            <p style="color:var(--muted); font-size:.9rem; line-height:1.6; margin:0;">{{ r.comment }}</p>
+  <!-- ── You Might Also Like ────────────────────────────────────── -->
+  {% if related %}
+  <section class="pd-related-section">
+    <div class="container">
+      <div class="pd-section-header">
+        <h2 class="pd-section-title" style="margin:0;">You Might <span>Also Like</span></h2>
+        <a href="{{ url_for('shop') }}?category={{ product.category.slug }}" class="pd-see-all">See all →</a>
+      </div>
+      <div class="pd-related-scroll">
+        {% for p in related %}
+        <div class="product-card pd-related-card">
+          <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-img-wrap">
+            {% if p.image %}
+              <img src="{{ image_url(p.image) }}" alt="{{ p.name }}">
+            {% else %}
+              <div class="product-img-placeholder">{{ p.category.icon }}</div>
             {% endif %}
-            <div style="color:var(--muted); font-size:.78rem; margin-top:8px;">{{ r.created_at.strftime('%d %b %Y') }}</div>
+            {% if p.original_price %}<span class="badge-sale">SALE</span>{% endif %}
+          </a>
+          <div class="product-info">
+            <div class="product-cat">{{ p.category.name }}</div>
+            <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-name">{{ p.name }}</a>
+            {% if p.weight %}<div class="product-weight">{{ p.weight }}</div>{% endif %}
+            <div class="product-footer">
+              <div class="price-wrap">
+                <span class="price">{{ p.price|int }}</span>
+                {% if p.original_price %}<span class="original-price">{{ p.original_price|int }}</span>{% endif %}
+              </div>
+              <button class="add-cart-btn" onclick="addToCart({{ p.id }},'{{ p.name|replace("'","\\'") }}',{{ p.price }},'{{ p.image }}','{{ p.category.name }}')">+ Add</button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ── FAQ Accordion ──────────────────────────────────────────── -->
+  {% if faqs %}
+  <section class="pd-faq-section">
+    <div class="container">
+      <h2 class="pd-section-title" style="margin-bottom:28px;">Frequently Asked <span>Questions</span></h2>
+      <div class="pd-faq-list">
+        {% for faq in faqs %}
+        <div class="pd-faq-item">
+          <button class="pd-faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+            {{ faq.question }}
+            <span class="pd-faq-icon">+</span>
+          </button>
+          <div class="pd-faq-a">
+            <p>{{ faq.answer }}</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ── Reviews ────────────────────────────────────────────────── -->
+  <section class="pd-reviews-section">
+    <div class="container">
+      <h2 class="pd-section-title" style="margin-bottom:28px;">Customer <span>Reviews</span></h2>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+          <div style="padding:12px 16px; border-radius:10px; margin-bottom:16px;
+                      background:{{ '#f0fdfa' if cat=='success' else '#fef2f2' }};
+                      color:{{ '#0f766e' if cat=='success' else '#b91c1c' }}; font-weight:600;">
+            {{ msg }}
+          </div>
+        {% endfor %}
+      {% endwith %}
+
+      <div class="pd-reviews-grid">
+        <!-- Review list -->
+        <div>
+          {% if reviews %}
+          {% for r in reviews %}
+          <div class="pd-review-card">
+            <div class="pd-review-header">
+              <strong>{{ r.customer_name }}</strong>
+              <span class="pd-review-stars">{% for i in range(1,6) %}{{ '★' if i<=r.rating else '☆' }}{% endfor %}</span>
+            </div>
+            {% if r.comment %}<p class="pd-review-comment">{{ r.comment }}</p>{% endif %}
+            <div class="pd-review-date">{{ r.created_at.strftime('%d %b %Y') }}</div>
           </div>
           {% endfor %}
-        {% else %}
-          <div style="padding:32px; text-align:center; color:var(--muted); background:#f8fafc; border-radius:14px;">
-            <div style="font-size:2.5rem; margin-bottom:8px;">💬</div>
+          {% else %}
+          <div class="pd-no-reviews">
+            <span>💬</span>
             <p>No reviews yet. Be the first!</p>
           </div>
-        {% endif %}
-      </div>
-
-      <!-- Submit form -->
-      <div style="background:#f8fafc; border-radius:16px; padding:28px;">
-        <h3 style="color:var(--navy); font-size:1rem; font-weight:800; margin-bottom:20px;">Leave a Review</h3>
-        <form method="POST" action="{{ url_for('submit_review', pid=product.id) }}">
-          <div class="form-group" style="margin-bottom:14px;">
-            <label style="font-size:.85rem; font-weight:600; color:var(--navy); display:block; margin-bottom:6px;">Your Name *</label>
-            <input type="text" name="customer_name" required placeholder="e.g. Fatima R."
-                   style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:.9rem; box-sizing:border-box;">
-          </div>
-          <div class="form-group" style="margin-bottom:14px;">
-            <label style="font-size:.85rem; font-weight:600; color:var(--navy); display:block; margin-bottom:8px;">Rating *</label>
-            <div id="starPicker" style="display:flex; gap:6px; font-size:1.8rem; cursor:pointer; color:#d1d5db;">
-              {% for i in range(1, 6) %}
-              <span data-val="{{ i }}" style="transition:color .15s;">★</span>
-              {% endfor %}
-            </div>
-            <input type="hidden" name="rating" id="ratingInput" value="">
-          </div>
-          <div class="form-group" style="margin-bottom:18px;">
-            <label style="font-size:.85rem; font-weight:600; color:var(--navy); display:block; margin-bottom:6px;">Comment (optional)</label>
-            <textarea name="comment" rows="3" placeholder="Share your experience…"
-                      style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:.9rem; resize:vertical; box-sizing:border-box;"></textarea>
-          </div>
-          <button type="submit"
-                  style="background:var(--teal); color:#fff; border:none; padding:12px 28px;
-                         border-radius:10px; font-weight:700; font-size:.95rem; cursor:pointer; width:100%;">
-            Submit Review
-          </button>
-        </form>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- More from same category -->
-  {% if related %}
-  <div style="margin-top:64px; background:var(--light); border-radius:20px; padding:36px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
-      <h2 class="section-title" style="margin:0;">More from <span>{{ product.category.name }}</span></h2>
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:.82rem; color:var(--muted);">🎁 Buy 3+ items in this category → save 10%</span>
-        <a href="{{ url_for('shop') }}?category={{ product.category.slug }}" class="btn-sm btn-ghost">See all →</a>
-      </div>
-    </div>
-    <div class="product-grid">
-      {% for p in related %}
-      <div class="product-card">
-        <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-img-wrap">
-          {% if p.image %}
-            <img src="{{ image_url(p.image) }}" alt="{{ p.name }}">
-          {% else %}
-            <div class="product-img-placeholder">{{ p.category.icon }}</div>
           {% endif %}
-          {% if p.original_price %}<span class="badge-sale">SALE</span>{% endif %}
-        </a>
-        <div class="product-info">
-          <div class="product-cat">{{ p.category.name }}</div>
-          <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-name">{{ p.name }}</a>
-          {% if p.weight %}<div class="product-weight">{{ p.weight }}</div>{% endif %}
-          <div class="product-footer">
-            <div class="price-wrap">
-              <span class="price">{{ p.price|int }}</span>
-              {% if p.original_price %}<span class="original-price">{{ p.original_price|int }}</span>{% endif %}
+        </div>
+
+        <!-- Submit form -->
+        <div class="pd-review-form-wrap">
+          <h3>Leave a Review</h3>
+          <form method="POST" action="{{ url_for('submit_review', pid=product.id) }}">
+            <div class="form-group" style="margin-bottom:14px;">
+              <label style="font-size:.85rem; font-weight:600; color:var(--navy); display:block; margin-bottom:6px;">Your Name *</label>
+              <input type="text" name="customer_name" required placeholder="e.g. Fatima R."
+                     style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:.9rem; box-sizing:border-box;">
             </div>
-            <button class="add-cart-btn" onclick="addToCart({{ p.id }}, '{{ p.name|replace("'", "\\'") }}', {{ p.price }}, '{{ p.image }}', '{{ p.category.name }}')">+ Add</button>
-          </div>
+            <div class="form-group" style="margin-bottom:14px;">
+              <label style="font-size:.85rem; font-weight:600; color:var(--navy); display:block; margin-bottom:8px;">Rating *</label>
+              <div id="starPicker" style="display:flex; gap:6px; font-size:1.8rem; cursor:pointer; color:#d1d5db;">
+                {% for i in range(1,6) %}
+                <span data-val="{{ i }}" style="transition:color .15s;">★</span>
+                {% endfor %}
+              </div>
+              <input type="hidden" name="rating" id="ratingInput" value="">
+            </div>
+            <div class="form-group" style="margin-bottom:18px;">
+              <label style="font-size:.85rem; font-weight:600; color:var(--navy); display:block; margin-bottom:6px;">Comment (optional)</label>
+              <textarea name="comment" rows="3" placeholder="Share your experience…"
+                        style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:.9rem; resize:vertical; box-sizing:border-box;"></textarea>
+            </div>
+            <button type="submit" class="pd-review-submit">Submit Review</button>
+          </form>
         </div>
       </div>
-      {% endfor %}
     </div>
-  </div>
-  {% endif %}
+  </section>
 
-  <!-- Complete the Set -->
-  {% if complementary %}
-  <div style="margin-top:48px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
-      <h2 class="section-title" style="margin:0;">Complete the <span>Set</span></h2>
-      <a href="{{ url_for('shop') }}" class="btn-sm btn-ghost">Browse all →</a>
-    </div>
-    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:20px;">
-      {% for p in complementary %}
-      <div class="product-card" style="border:2px solid #f0fdfa;">
-        <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-img-wrap">
-          {% if p.image %}
-            <img src="{{ image_url(p.image) }}" alt="{{ p.name }}">
-          {% else %}
-            <div class="product-img-placeholder">{{ p.category.icon }}</div>
-          {% endif %}
-          <span class="badge-feat">✦ Pairs Well</span>
-        </a>
-        <div class="product-info">
-          <div class="product-cat">{{ p.category.icon }} {{ p.category.name }}</div>
-          <a href="{{ url_for('product_detail', pid=p.id) }}" class="product-name">{{ p.name }}</a>
-          {% if p.weight %}<div class="product-weight">{{ p.weight }}</div>{% endif %}
-          <div class="product-footer">
-            <div class="price-wrap">
-              <span class="price">{{ p.price|int }}</span>
-              {% if p.original_price %}<span class="original-price">{{ p.original_price|int }}</span>{% endif %}
-            </div>
-            <button class="add-cart-btn" onclick="addToCart({{ p.id }}, '{{ p.name|replace("'", "\\'") }}', {{ p.price }}, '{{ p.image }}', '{{ p.category.name }}')">+ Add</button>
-          </div>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
+</div>
+
+<!-- ── Lightbox ───────────────────────────────────────────────────── -->
+<div class="pd-lightbox" id="pdLightbox" onclick="closeLightbox()">
+  <button class="pd-lightbox-close" onclick="closeLightbox()" aria-label="Close">✕</button>
+  <img id="pdLightboxImg" src="" alt="Product image">
 </div>
 
 {% block scripts %}
@@ -265,18 +318,56 @@
 </script>
 <script>
 (function () {
+  // Qty buttons
+  const minus = document.getElementById('pdMinus');
+  const plus  = document.getElementById('pdPlus');
+  const qty   = document.getElementById('pdQty');
+  if (minus && plus && qty) {
+    minus.addEventListener('click', () => { let v = parseInt(qty.textContent); if (v > 1) qty.textContent = v - 1; });
+    plus.addEventListener('click',  () => { qty.textContent = parseInt(qty.textContent) + 1; });
+  }
+
+  // Star picker
   const stars = document.querySelectorAll('#starPicker span');
   const input = document.getElementById('ratingInput');
-  if (!stars.length) return;
-  stars.forEach(s => {
-    s.addEventListener('mouseover', () => highlight(+s.dataset.val));
-    s.addEventListener('mouseout',  () => highlight(+input.value || 0));
-    s.addEventListener('click',     () => { input.value = s.dataset.val; highlight(+s.dataset.val); });
-  });
-  function highlight(n) {
-    stars.forEach(s => s.style.color = +s.dataset.val <= n ? '#f59e0b' : '#d1d5db');
+  if (stars.length) {
+    stars.forEach(s => {
+      s.addEventListener('mouseover', () => highlight(+s.dataset.val));
+      s.addEventListener('mouseout',  () => highlight(+input.value || 0));
+      s.addEventListener('click',     () => { input.value = s.dataset.val; highlight(+s.dataset.val); });
+    });
+    function highlight(n) {
+      stars.forEach(s => s.style.color = +s.dataset.val <= n ? '#f59e0b' : '#d1d5db');
+    }
   }
 })();
+
+function expandDesc() {
+  document.getElementById('pdDescShort').style.display = 'none';
+  document.getElementById('pdDescFull').style.display = 'block';
+}
+
+function toggleFaq(btn) {
+  const item    = btn.closest('.pd-faq-item');
+  const answer  = item.querySelector('.pd-faq-a');
+  const icon    = btn.querySelector('.pd-faq-icon');
+  const isOpen  = btn.getAttribute('aria-expanded') === 'true';
+  btn.setAttribute('aria-expanded', !isOpen);
+  answer.style.maxHeight  = isOpen ? '0' : answer.scrollHeight + 'px';
+  answer.style.opacity    = isOpen ? '0' : '1';
+  icon.textContent        = isOpen ? '+' : '−';
+}
+
+function openLightbox(src) {
+  document.getElementById('pdLightboxImg').src = src;
+  document.getElementById('pdLightbox').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('pdLightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 </script>
 {% endblock %}
 

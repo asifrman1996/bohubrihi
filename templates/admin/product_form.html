@@ -51,9 +51,10 @@
       </div>
 
       <div class="form-group" style="grid-column:1/-1;">
-        <label>Ingredients (optional)</label>
+        <label>Ingredients (text list)</label>
         <input type="text" name="ingredients" value="{{ product.ingredients if product else '' }}"
                placeholder="e.g. Neem extract, Turmeric, Coconut oil, Shea butter…">
+        <small style="color:var(--muted); font-size:.78rem;">Plain text shown in the ingredients text block. Use "Linked Ingredients" below for the visual cards.</small>
       </div>
 
       <div class="form-group" style="grid-column:1/-1;">
@@ -84,9 +85,33 @@
           </label>
         </div>
       </div>
+
+      <!-- ── Linked Ingredients ──────────────────────────────────── -->
+      <div class="form-group" style="grid-column:1/-1; border-top:2px solid var(--border); padding-top:20px; margin-top:4px;">
+        <label>Linked Ingredients</label>
+        <p style="font-size:.82rem; color:var(--muted); margin:4px 0 12px;">
+          Select ingredients to feature as visual cards on the product page.
+        </p>
+        {% if all_ingredients %}
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          {% for ing in all_ingredients %}
+          <label style="display:flex; align-items:center; gap:6px; padding:7px 14px; background:#f8fafc; border:1.5px solid var(--border); border-radius:8px; cursor:pointer; font-size:.85rem; transition:border-color .15s;">
+            <input type="checkbox" name="ingredient_ids" value="{{ ing.id }}"
+                   {% if product and ing in product.linked_ingredients %}checked{% endif %}
+                   style="accent-color:var(--teal); width:14px; height:14px;">
+            {{ ing.name }}
+          </label>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p style="font-size:.85rem; color:var(--muted);">
+          No ingredients yet. <a href="{{ url_for('admin_add_ingredient') }}" style="color:var(--teal);">Add ingredients →</a>
+        </p>
+        {% endif %}
+      </div>
     </div>
 
-    <div style="display:flex; gap:12px; margin-top:8px;">
+    <div style="display:flex; gap:12px; margin-top:24px;">
       <button type="submit" class="btn btn-teal">
         {{ '💾 Save Changes' if product else '➕ Add Product' }}
       </button>
@@ -94,6 +119,46 @@
     </div>
   </form>
 </div>
+
+<!-- ── Product FAQs (edit mode only) ─────────────────────────────── -->
+{% if product %}
+<div class="admin-form-card" style="margin-top:24px;">
+  <h3 style="font-size:.95rem; font-weight:800; color:var(--navy); margin-bottom:4px;">Product FAQs</h3>
+  <p style="font-size:.82rem; color:var(--muted); margin-bottom:20px;">
+    FAQs appear in an accordion below the product description.
+  </p>
+
+  {% if faqs %}
+  <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+    {% for faq in faqs %}
+    <div style="display:flex; align-items:flex-start; gap:12px; padding:14px 16px; background:#f8fafc; border-radius:10px; border:1.5px solid var(--border);">
+      <div style="flex:1; min-width:0;">
+        <p style="font-size:.88rem; font-weight:700; color:var(--navy); margin:0 0 4px;">{{ faq.question }}</p>
+        <p style="font-size:.82rem; color:var(--muted); margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ faq.answer }}</p>
+      </div>
+      <form method="POST" action="{{ url_for('admin_delete_product_faq', pid=product.id, fid=faq.id) }}"
+            onsubmit="return confirm('Delete this FAQ?')" style="flex-shrink:0;">
+        <button type="submit" class="btn-sm btn-red">Delete</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div style="background:#f0fdfa; border-radius:12px; padding:18px; border:1.5px solid #99f6e4;">
+    <h4 style="font-size:.82rem; font-weight:700; color:var(--navy); margin:0 0 14px;">Add New FAQ</h4>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <input type="text" id="newFaqQ" placeholder="Question — e.g. Is this suitable for sensitive skin?"
+             style="padding:10px 13px; border:1.5px solid var(--border); border-radius:8px; font-size:.9rem; font-family:inherit; width:100%; box-sizing:border-box;">
+      <textarea id="newFaqA" rows="3" placeholder="Answer…"
+                style="padding:10px 13px; border:1.5px solid var(--border); border-radius:8px; font-size:.9rem; font-family:inherit; resize:vertical; width:100%; box-sizing:border-box;"></textarea>
+      <button type="button" onclick="submitFaq({{ product.id }})" class="btn btn-teal" style="align-self:flex-start; padding:10px 20px;">
+        + Add FAQ
+      </button>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 <script>
 document.getElementById('imgInput').addEventListener('change', function(e) {
@@ -107,5 +172,19 @@ document.getElementById('imgInput').addEventListener('change', function(e) {
     reader.readAsDataURL(file);
   }
 });
+
+function submitFaq(pid) {
+  const q = document.getElementById('newFaqQ').value.trim();
+  const a = document.getElementById('newFaqA').value.trim();
+  if (!q || !a) { alert('Both question and answer are required.'); return; }
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/admin/products/' + pid + '/faqs/add';
+  const qi = document.createElement('input'); qi.type='hidden'; qi.name='question'; qi.value=q;
+  const ai = document.createElement('input'); ai.type='hidden'; ai.name='answer';   ai.value=a;
+  form.appendChild(qi); form.appendChild(ai);
+  document.body.appendChild(form);
+  form.submit();
+}
 </script>
 {% endblock %}
