@@ -39,6 +39,19 @@ def inject_version():
     return dict(cache_bust=str(int(time.time())))
 
 
+@app.context_processor
+def inject_nav_categories():
+    if request.endpoint and (
+        request.endpoint.startswith('admin_') or request.endpoint == 'static'
+    ):
+        return {}
+    try:
+        cats = Category.query.order_by(Category.sort_order).all()
+    except Exception:
+        cats = []
+    return dict(nav_categories=cats)
+
+
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
@@ -363,6 +376,7 @@ SETTING_KEYS = [
     'announcement_text', 'announcement_active',
     'hero_headline', 'hero_subheadline', 'hero_button_text',
     'hero_button_link', 'hero_image_url',
+    'social_facebook', 'social_instagram', 'social_tiktok', 'social_youtube',
 ]
 
 PAGE_SLUGS = [

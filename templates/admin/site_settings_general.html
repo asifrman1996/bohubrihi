@@ -88,6 +88,36 @@
     </div>
   </div>
 
+  <!-- Social Media Links -->
+  <div class="admin-form-card" style="margin-top:24px; max-width:100%;">
+    <h3 style="font-size:.95rem; font-weight:700; color:var(--navy); margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--border);">
+      🔗 Social Media Links
+    </h3>
+    <p style="font-size:.82rem; color:var(--muted); margin-bottom:20px;">URLs are shown as icons in the footer. Leave blank to hide.</p>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+      <div class="form-group">
+        <label>Facebook</label>
+        <input type="url" name="social_facebook" value="{{ settings.social_facebook }}"
+               placeholder="https://facebook.com/yourpage">
+      </div>
+      <div class="form-group">
+        <label>Instagram</label>
+        <input type="url" name="social_instagram" value="{{ settings.social_instagram }}"
+               placeholder="https://instagram.com/yourhandle">
+      </div>
+      <div class="form-group">
+        <label>TikTok</label>
+        <input type="url" name="social_tiktok" value="{{ settings.social_tiktok }}"
+               placeholder="https://tiktok.com/@yourhandle">
+      </div>
+      <div class="form-group">
+        <label>YouTube</label>
+        <input type="url" name="social_youtube" value="{{ settings.social_youtube }}"
+               placeholder="https://youtube.com/yourchannel">
+      </div>
+    </div>
+  </div>
+
   <div style="margin-top:20px;">
     <button type="submit" class="btn btn-teal">💾 Save Settings</button>
   </div>

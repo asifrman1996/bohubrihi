@@ -33,28 +33,160 @@
 </head>
 <body>
 
-<header>
+<!-- ── Site Header ──────────────────────────────────────────── -->
+<header class="site-header">
+
   {% set _ann = get_setting('announcement_text') %}
   {% if get_setting('announcement_active') == '1' and _ann %}
   <div class="announcement-bar">{{ _ann }}</div>
   {% endif %}
-  <div class="header-inner">
-    <a href="{{ url_for('index') }}" class="logo">
-      <img src="{{ url_for('static', filename='uploads/logo.png') }}?v={{ cache_bust }}" alt="Bohubrihi" class="logo-img"
-           onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-      <span class="logo-fallback-text" style="display:none;">Bohubrihi<span>.</span></span>
-      <small>Organic Skincare</small>
-    </a>
-    <nav>
-      <a href="{{ url_for('index') }}" {% if request.endpoint=='index' %}class="active"{% endif %}>Home</a>
-      <a href="{{ url_for('shop') }}" {% if request.endpoint in ['shop','product_detail'] %}class="active"{% endif %}>Shop</a>
-      <a href="{{ url_for('about') }}" {% if request.endpoint=='about' %}class="active"{% endif %}>About</a>
-      <a href="#" class="cart-btn" id="openCartBtn">
-        🛒 Cart <span class="cart-count" style="display:none">0</span>
+
+  <!-- TOP BAR: white, logo + search + cart -->
+  <div class="header-top">
+    <div class="header-top-inner">
+
+      <a href="{{ url_for('index') }}" class="logo">
+        <img src="{{ url_for('static', filename='uploads/logo.png') }}?v={{ cache_bust }}"
+             alt="Bohubrihi" class="logo-img"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        <span class="logo-text" style="display:none;">Bohubrihi<span class="logo-dot">.</span><small>Organic Skincare</small></span>
       </a>
-    </nav>
+
+      <form class="header-search" action="{{ url_for('shop') }}" method="GET" role="search">
+        <input type="text" name="q" autocomplete="off" aria-label="Search products"
+               placeholder="Search products…"
+               value="{{ request.args.get('q', '') if request.endpoint == 'shop' else '' }}">
+        <button type="submit" aria-label="Search">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
+      </form>
+
+      <div class="header-actions">
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+        <a href="#" class="cart-btn" id="openCartBtn" aria-label="View cart">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+          </svg>
+          <span class="cart-label">Cart</span>
+          <span class="cart-count" style="display:none">0</span>
+        </a>
+      </div>
+    </div>
   </div>
+
+  <!-- NAV BAR: maroon, category links + mega trigger -->
+  <nav class="header-nav" id="siteNav" aria-label="Main navigation">
+    <div class="header-nav-inner">
+      <a href="{{ url_for('index') }}"
+         class="nav-link{% if request.endpoint == 'index' %} active{% endif %}">Home</a>
+
+      <button class="nav-link nav-dropdown-btn" id="shopAllBtn"
+              aria-expanded="false" aria-haspopup="true">
+        Shop All
+        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="3"
+             stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+
+      {% for cat in nav_categories[:4] %}
+      <a href="{{ url_for('shop') }}?category={{ cat.slug }}"
+         class="nav-link{% if request.args.get('category') == cat.slug %} active{% endif %}">
+        {{ cat.name }}
+      </a>
+      {% endfor %}
+
+      <a href="{{ url_for('shop') }}"
+         class="nav-link{% if request.endpoint == 'bundle_detail' %} active{% endif %}">Bundles</a>
+      <a href="{{ url_for('about') }}"
+         class="nav-link{% if request.endpoint == 'about' %} active{% endif %}">About</a>
+    </div>
+  </nav>
+
+  <!-- MEGA MENU (full-width dropdown, shown when Shop All is clicked) -->
+  <div class="mega-menu" id="megaMenu" aria-hidden="true">
+    <div class="container">
+      <div class="mega-menu-inner">
+
+        <div class="mega-col">
+          <p class="mega-col-title">Browse</p>
+          <ul>
+            <li><a href="{{ url_for('shop') }}">All Products</a></li>
+            {% for cat in nav_categories %}
+            <li><a href="{{ url_for('shop') }}?category={{ cat.slug }}">{{ cat.icon }} {{ cat.name }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div class="mega-col">
+          <p class="mega-col-title">Top Picks</p>
+          <ul>
+            <li><a href="{{ url_for('shop') }}?category=face-care">Face Serums</a></li>
+            <li><a href="{{ url_for('shop') }}?category=hair-care">Hair Oils</a></li>
+            <li><a href="{{ url_for('shop') }}?category=body-care">Body Butters</a></li>
+            <li><a href="{{ url_for('shop') }}?category=soaps">Handmade Soaps</a></li>
+            <li><a href="{{ url_for('shop') }}">Bundle Deals</a></li>
+          </ul>
+        </div>
+
+        <div class="mega-col">
+          <p class="mega-col-title">Information</p>
+          <ul>
+            <li><a href="{{ url_for('about') }}">About Us</a></li>
+            <li><a href="{{ url_for('blog_index') }}">Our Blog</a></li>
+            <li><a href="{{ url_for('faq') }}">FAQ</a></li>
+            <li><a href="{{ url_for('shipping') }}">Shipping Info</a></li>
+            <li><a href="{{ url_for('returns') }}">Returns</a></li>
+          </ul>
+        </div>
+
+        <div class="mega-feature">
+          <a href="{{ url_for('shop') }}" class="mega-feature-card">
+            <span class="mega-feature-label">FEATURED</span>
+            <p class="mega-feature-name">Brightening Combo</p>
+            <span class="mega-feature-cta">Shop Now →</span>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
 </header>
+
+<!-- Mobile Nav (outside header so it overlays correctly) -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+<aside class="mobile-nav" id="mobileNav" aria-hidden="true" aria-label="Mobile navigation">
+  <div class="mobile-nav-header">
+    <a href="{{ url_for('index') }}" class="mobile-nav-logo">Bohubrihi<span>.</span></a>
+    <button class="mobile-nav-close" id="mobileNavClose" aria-label="Close menu">✕</button>
+  </div>
+  <form class="mobile-nav-search" action="{{ url_for('shop') }}" method="GET">
+    <input type="text" name="q" placeholder="Search products…" autocomplete="off">
+    <button type="submit" aria-label="Search">→</button>
+  </form>
+  <nav class="mobile-nav-links">
+    <a href="{{ url_for('index') }}">Home</a>
+    <a href="{{ url_for('shop') }}">Shop All</a>
+    {% for cat in nav_categories %}
+    <a href="{{ url_for('shop') }}?category={{ cat.slug }}">{{ cat.icon }} {{ cat.name }}</a>
+    {% endfor %}
+    <a href="{{ url_for('shop') }}">Bundles</a>
+    <a href="{{ url_for('about') }}">About</a>
+    <a href="{{ url_for('blog_index') }}">Blog</a>
+    <a href="{{ url_for('faq') }}">FAQ</a>
+  </nav>
+</aside>
 
 <!-- Cart Sidebar -->
 <div class="cart-overlay" id="cartOverlay"></div>
@@ -79,8 +211,28 @@
   <div class="container">
     <div class="footer-grid">
       <div class="footer-brand">
-        <div class="logo">Bohubrihi<span>.</span><small>Organic Skincare</small></div>
+        <div class="logo" style="color:#fff;">Bohubrihi<span style="color:var(--lime);">.</span><small style="color:rgba(255,255,255,.5);">Organic Skincare</small></div>
         <p>Pure, natural skincare crafted with love. We believe in the power of nature to nourish and heal your skin.</p>
+        {% set _fb  = get_setting('social_facebook') %}
+        {% set _ig  = get_setting('social_instagram') %}
+        {% set _tt  = get_setting('social_tiktok') %}
+        {% set _yt  = get_setting('social_youtube') %}
+        {% if _fb or _ig or _tt or _yt %}
+        <div class="footer-social">
+          {% if _fb %}<a href="{{ _fb }}" target="_blank" rel="noopener" aria-label="Facebook">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>{% endif %}
+          {% if _ig %}<a href="{{ _ig }}" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          </a>{% endif %}
+          {% if _tt %}<a href="{{ _tt }}" target="_blank" rel="noopener" aria-label="TikTok">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.72a8.18 8.18 0 0 0 4.78 1.52V6.79a4.85 4.85 0 0 1-1.01-.1z"/></svg>
+          </a>{% endif %}
+          {% if _yt %}<a href="{{ _yt }}" target="_blank" rel="noopener" aria-label="YouTube">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58zM9.75 15.02V8.98L15.5 12l-5.75 3.02z"/></svg>
+          </a>{% endif %}
+        </div>
+        {% endif %}
       </div>
       <div>
         <h4>Shop</h4>
@@ -109,6 +261,58 @@
 </footer>
 
 <script src="{{ url_for('static', filename='js/store.js') }}"></script>
+
+<!-- Header / nav JS -->
+<script>
+(function () {
+  var shopAllBtn      = document.getElementById('shopAllBtn');
+  var megaMenu        = document.getElementById('megaMenu');
+  var hamburgerBtn    = document.getElementById('hamburgerBtn');
+  var mobileNav       = document.getElementById('mobileNav');
+  var mobileOverlay   = document.getElementById('mobileNavOverlay');
+  var mobileClose     = document.getElementById('mobileNavClose');
+
+  // ── Mega menu ──
+  function openMega() {
+    megaMenu.classList.add('open');
+    shopAllBtn.setAttribute('aria-expanded', 'true');
+    megaMenu.setAttribute('aria-hidden', 'false');
+  }
+  function closeMega() {
+    megaMenu.classList.remove('open');
+    shopAllBtn.setAttribute('aria-expanded', 'false');
+    megaMenu.setAttribute('aria-hidden', 'true');
+  }
+  shopAllBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    megaMenu.classList.contains('open') ? closeMega() : openMega();
+  });
+  megaMenu.addEventListener('click', function (e) { e.stopPropagation(); });
+  document.addEventListener('click', closeMega);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { closeMega(); closeMobileNav(); }
+  });
+
+  // ── Mobile nav ──
+  function openMobileNav() {
+    mobileNav.classList.add('open');
+    mobileOverlay.classList.add('open');
+    mobileNav.setAttribute('aria-hidden', 'false');
+    hamburgerBtn.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeMobileNav() {
+    mobileNav.classList.remove('open');
+    mobileOverlay.classList.remove('open');
+    mobileNav.setAttribute('aria-hidden', 'true');
+    hamburgerBtn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+  hamburgerBtn.addEventListener('click', openMobileNav);
+  mobileClose.addEventListener('click', closeMobileNav);
+  mobileOverlay.addEventListener('click', closeMobileNav);
+})();
+</script>
 
 <!-- Messenger floating button -->
 <a href="https://m.me/bohubrihicosmeticsofficial1908" target="_blank" rel="noopener"

@@ -20,27 +20,10 @@
   </div>
 </section>
 
-<!-- ── Trust Badges ──────────────────────────────────────────────── -->
-<section class="trust-section">
-  <div class="container">
-    <div class="trust-grid">
-      {% for icon, title, desc in [
-        ('🌱', '100% Organic',      'Certified organic and sustainably sourced ingredients.'),
-        ('🧪', 'No Chemicals',      'Free from parabens, sulfates, and artificial fragrances.'),
-        ('🇧🇩', 'Made in Bangladesh','Proudly crafted locally with traditional recipes.'),
-        ('💚', 'Cruelty Free',      'Never tested on animals. Always ethical and kind.'),
-      ] %}
-      <div class="trust-item">
-        <span class="trust-icon">{{ icon }}</span>
-        <div class="trust-text">
-          <h4>{{ title }}</h4>
-          <p>{{ desc }}</p>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
+<!-- ── Trust Strip ────────────────────────────────────────────────── -->
+<div class="homepage-trust-strip">
+  100% ORGANIC &nbsp;·&nbsp; NO CHEMICALS &nbsp;·&nbsp; CRUELTY FREE &nbsp;·&nbsp; MADE IN BANGLADESH
+</div>
 
 <!-- ── Categories Bar ────────────────────────────────────────────── -->
 <section class="categories-section">
