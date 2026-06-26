@@ -35,6 +35,11 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 body {
   font-family: var(--font-body);
   background: var(--bg);
@@ -1276,15 +1281,12 @@ tbody tr:hover { background: #FFF7F9; }
   .header-search    { display: none; }
   .header-search button { display: none; }
 
-  /* Trust strip: horizontal scroll on mobile */
+  /* Trust strip: marquee on mobile — overflow handled by 900px rule */
   .homepage-trust-strip {
-    overflow-x: auto;
+    overflow: hidden;
     white-space: nowrap;
-    text-align: left;
-    scrollbar-width: none;
-    padding: 11px 16px;
+    padding: 11px 0;
   }
-  .homepage-trust-strip::-webkit-scrollbar { display: none; }
 
   .hero-headline { font-size: 1.9rem; }
 
@@ -1374,10 +1376,7 @@ tbody tr:hover { background: #FFF7F9; }
 
   /* Cart page: full-width summary bar */
   .cart-page-summary-col {
-    margin-left: -12px;
-    margin-right: -12px;
-    padding-left: 12px;
-    padding-right: 12px;
+    width: 100%;
   }
 }
 
@@ -2172,7 +2171,7 @@ tbody tr:hover { background: #FFF7F9; }
 @media (max-width: 900px) {
   .ann-full  { display: none; }
   .ann-short { display: inline; }
-  .announcement-bar { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .announcement-bar { overflow: hidden; }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -2232,7 +2231,8 @@ tbody tr:hover { background: #FFF7F9; }
 }
 @media (max-width: 900px) {
   .homepage-trust-strip {
-    overflow: hidden !important;
+    overflow: hidden;
+    width: 100%;
     white-space: nowrap;
     text-align: left;
     padding: 11px 0;
