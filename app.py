@@ -498,7 +498,7 @@ def seed_data():
 
 @app.route('/')
 def index():
-    featured         = Product.query.filter_by(featured=True, in_stock=True).limit(8).all()
+    featured         = Product.query.filter_by(featured=True, in_stock=True).limit(4).all()
     featured_bundles = Bundle.query.filter_by(featured=True, in_stock=True).all()
     testimonials     = Testimonial.query.filter_by(active=True).order_by(Testimonial.created_at.desc()).all()
     return render_template('store/index.html',

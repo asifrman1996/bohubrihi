@@ -413,7 +413,7 @@ button { cursor: pointer; border: none; }
   background: #fff;
   z-index: 600;
   transform: translateX(-100%);
-  transition: transform .28s ease;
+  transition: transform .32s cubic-bezier(0.22, 0.61, 0.36, 1);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -1099,10 +1099,30 @@ tbody tr:hover { background: #FFF7F9; }
   padding: 64px 0;
   background: linear-gradient(135deg, #FDF0F3, #FDF6F0);
 }
-.testimonials-grid {
+.testimonials-carousel { overflow: hidden; position: relative; }
+.testimonials-track {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
   gap: 24px;
+}
+.testimonials-dots {
+  display: none;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+.testimonials-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background .2s, transform .2s;
+}
+.testimonials-dot.active {
+  background: var(--maroon);
+  transform: scale(1.3);
 }
 .testimonial-card {
   background: #fff;
@@ -1338,7 +1358,7 @@ tbody tr:hover { background: #FFF7F9; }
 
   .trust-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
 
-  .testimonials-grid { grid-template-columns: 1fr; }
+  .testimonials-track { grid-template-columns: 1fr; }
   .ba-grid           { grid-template-columns: 1fr; }
   .blog-grid         { grid-template-columns: 1fr; }
 
@@ -2067,4 +2087,215 @@ tbody tr:hover { background: #FFF7F9; }
   .pd-price { font-size: 1.7rem; }
   .pd-trust-item { font-size: .68rem; padding: 10px 4px; }
   .pd-ingredient-card { width: 150px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIX #3 — Messenger FAB
+   ══════════════════════════════════════════════════════════════ */
+.messenger-fab {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  z-index: 999;
+  display: flex; align-items: center; justify-content: center;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #0866ff;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  color: #fff; text-decoration: none;
+  transition: transform .2s ease, opacity .35s ease;
+}
+.messenger-fab:hover { transform: scale(1.1); }
+.messenger-fab.fab--hidden { opacity: 0.25; }
+
+@media (max-width: 900px) {
+  .messenger-fab {
+    right: auto; left: 20px;
+    bottom: 80px;
+  }
+}
+@media (max-width: 540px) {
+  .messenger-fab {
+    width: 46px; height: 46px;
+    left: 14px; bottom: 72px;
+  }
+  .messenger-fab svg { width: 22px !important; height: 22px !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIX #2 — Footer accordion (mobile ≤480px)
+   ══════════════════════════════════════════════════════════════ */
+.footer-accordion-trigger {
+  display: none;
+}
+.footer-accordion-icon {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: transform .25s ease;
+}
+.footer-accordion-trigger[aria-expanded="true"] .footer-accordion-icon {
+  transform: rotate(45deg);
+}
+
+@media (max-width: 480px) {
+  /* Brand column stays expanded — only Shop/Help/About collapse */
+  .footer-accordion .footer-h4 { display: none; }
+  .footer-accordion-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: none; border: none;
+    border-bottom: 1px solid var(--border);
+    padding: 14px 0;
+    font-size: .82rem; font-weight: 700;
+    color: var(--navy);
+    letter-spacing: .06em; text-transform: uppercase;
+    cursor: pointer; font-family: inherit;
+    text-align: left;
+  }
+  .footer-accordion-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .32s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .footer-accordion-body.open {
+    max-height: 320px;
+  }
+  .footer-accordion-body li:first-child a { padding-top: 12px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIX #6 — Announcement bar mobile text
+   ══════════════════════════════════════════════════════════════ */
+.ann-short { display: none; }
+@media (max-width: 900px) {
+  .ann-full  { display: none; }
+  .ann-short { display: inline; }
+  .announcement-bar { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIX #7 — Mobile header search expand
+   ══════════════════════════════════════════════════════════════ */
+.mobile-search-trigger {
+  display: none;
+  align-items: center; justify-content: center;
+  background: none; border: none;
+  color: var(--navy); padding: 8px;
+  cursor: pointer; flex-shrink: 0;
+}
+.mobile-search-expand {
+  display: none;
+  background: #fff;
+  border-top: 1px solid var(--border);
+  padding: 10px 12px;
+}
+.mobile-search-expand form {
+  display: flex; gap: 8px; align-items: center;
+}
+.mobile-search-expand input {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: .9rem; font-family: inherit;
+  outline: none; background: transparent;
+  transition: border-color .2s;
+}
+.mobile-search-expand input:focus { border-color: var(--teal); }
+.mobile-search-expand .ms-submit {
+  background: var(--teal); color: #fff;
+  border: none; border-radius: 10px;
+  padding: 10px 18px; font-weight: 600;
+  font-size: .88rem; font-family: inherit;
+  cursor: pointer; white-space: nowrap;
+}
+.mobile-search-expand .ms-close {
+  background: none; border: none;
+  color: var(--muted); font-size: 1.2rem;
+  cursor: pointer; padding: 8px 4px; line-height: 1;
+}
+.mobile-search-expand.open { display: block; }
+
+@media (max-width: 900px) {
+  .mobile-search-trigger { display: flex; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIX #8 — Trust strip marquee on mobile
+   ══════════════════════════════════════════════════════════════ */
+.trust-marquee { display: block; }
+@keyframes trust-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@media (max-width: 900px) {
+  .homepage-trust-strip {
+    overflow: hidden !important;
+    white-space: nowrap;
+    text-align: left;
+    padding: 11px 0;
+  }
+  .trust-marquee {
+    display: inline-block;
+    animation: trust-scroll 22s linear infinite;
+  }
+  .trust-marquee:hover { animation-play-state: paused; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIX #5 — Testimonials carousel (mobile ≤900px)
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .testimonials-dots { display: flex; }
+  .testimonials-carousel {
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .testimonials-carousel.dragging { cursor: grabbing; }
+  .testimonials-track {
+    display: flex;
+    gap: 20px;
+    transition: transform .35s cubic-bezier(0.22, 0.61, 0.36, 1);
+    will-change: transform;
+  }
+  .testimonials-track .testimonial-card {
+    flex: 0 0 100%;
+    min-width: 0;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIX #9 — Spacing gaps on mobile
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .section              { padding: var(--sp-5) 0; }
+  .testimonials-section { padding: var(--sp-5) 0; }
+  .bundle-deals-section { padding: var(--sp-4) 0; }
+  .ba-section, .blog-section { padding: var(--sp-5) 0; }
+  footer { margin-top: var(--sp-5); padding-top: var(--sp-5); }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIX #4 — Shop All Products CTA button below featured grid
+   ══════════════════════════════════════════════════════════════ */
+.shop-all-cta {
+  text-align: center;
+  margin-top: var(--sp-4);
+}
+.shop-all-cta a {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--maroon); color: #fff;
+  padding: .75rem 2rem; border-radius: 100px;
+  font-size: .9375rem; font-weight: 500;
+  letter-spacing: .04em;
+  text-decoration: none;
+  transition: background .2s, transform .2s;
+}
+.shop-all-cta a:hover {
+  background: var(--maroon-deep);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(194,56,90,0.35);
 }

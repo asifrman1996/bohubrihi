@@ -39,7 +39,10 @@
 
   {% set _ann = get_setting('announcement_text') %}
   {% if get_setting('announcement_active') == '1' and _ann %}
-  <div class="announcement-bar">{{ _ann }}</div>
+  <div class="announcement-bar">
+    <span class="ann-full">{{ _ann }}</span>
+    <span class="ann-short">Free delivery above BDT 2500 &nbsp;·&nbsp; Cash on delivery</span>
+  </div>
   {% endif %}
 
   <!-- TOP BAR: white, logo + search + cart -->
@@ -67,6 +70,13 @@
       </form>
 
       <div class="header-actions">
+        <button class="mobile-search-trigger" id="mobileSearchTrigger" aria-label="Search" aria-expanded="false">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
         <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">
           <span></span><span></span><span></span>
         </button>
@@ -81,6 +91,16 @@
         </a>
       </div>
     </div>
+  <!-- Mobile search expand panel -->
+  <div class="mobile-search-expand" id="mobileSearchExpand" aria-hidden="true">
+    <form action="{{ url_for('shop') }}" method="GET" role="search">
+      <input type="text" name="q" id="mobileSearchInput" placeholder="Search products…"
+             autocomplete="off" aria-label="Search products"
+             value="{{ request.args.get('q', '') if request.endpoint == 'shop' else '' }}">
+      <button type="submit" class="ms-submit">Search</button>
+      <button type="button" class="ms-close" id="mobileSearchClose" aria-label="Close search">✕</button>
+    </form>
+  </div>
   </div>
 
   <!-- NAV BAR: brand maroon, all nav links -->
@@ -263,10 +283,13 @@
         {% endif %}
       </div>
 
-      <!-- Col 2: Shop -->
-      <div>
-        <h4>Shop</h4>
-        <ul>
+      <!-- Col 2: Shop (accordion on mobile) -->
+      <div class="footer-accordion">
+        <h4 class="footer-h4">Shop</h4>
+        <button class="footer-accordion-trigger" aria-expanded="false" aria-controls="footer-shop-links">
+          Shop <span class="footer-accordion-icon" aria-hidden="true">+</span>
+        </button>
+        <ul class="footer-accordion-body" id="footer-shop-links">
           <li><a href="{{ url_for('shop') }}?category=soaps">Soaps</a></li>
           <li><a href="{{ url_for('shop') }}?category=face-care">Face Care</a></li>
           <li><a href="{{ url_for('shop') }}?category=hair-care">Hair Care</a></li>
@@ -275,10 +298,13 @@
         </ul>
       </div>
 
-      <!-- Col 3: Help -->
-      <div>
-        <h4>Help</h4>
-        <ul>
+      <!-- Col 3: Help (accordion on mobile) -->
+      <div class="footer-accordion">
+        <h4 class="footer-h4">Help</h4>
+        <button class="footer-accordion-trigger" aria-expanded="false" aria-controls="footer-help-links">
+          Help <span class="footer-accordion-icon" aria-hidden="true">+</span>
+        </button>
+        <ul class="footer-accordion-body" id="footer-help-links">
           <li><a href="{{ url_for('shipping') }}">Shipping Info</a></li>
           <li><a href="{{ url_for('returns') }}">Returns</a></li>
           <li><a href="{{ url_for('faq') }}">FAQ</a></li>
@@ -286,10 +312,13 @@
         </ul>
       </div>
 
-      <!-- Col 4: About -->
-      <div>
-        <h4>About</h4>
-        <ul>
+      <!-- Col 4: About (accordion on mobile) -->
+      <div class="footer-accordion">
+        <h4 class="footer-h4">About</h4>
+        <button class="footer-accordion-trigger" aria-expanded="false" aria-controls="footer-about-links">
+          About <span class="footer-accordion-icon" aria-hidden="true">+</span>
+        </button>
+        <ul class="footer-accordion-body" id="footer-about-links">
           <li><a href="{{ url_for('about') }}">Our Story</a></li>
           <li><a href="{{ url_for('shop') }}">All Products</a></li>
           <li><a href="{{ url_for('faq') }}">Contact Us</a></li>
@@ -383,14 +412,70 @@
 })();
 </script>
 
+<!-- Mobile search expand JS -->
+<script>
+(function () {
+  var trigger = document.getElementById('mobileSearchTrigger');
+  var panel   = document.getElementById('mobileSearchExpand');
+  var close   = document.getElementById('mobileSearchClose');
+  var input   = document.getElementById('mobileSearchInput');
+  if (!trigger || !panel) return;
+
+  function openSearch() {
+    panel.classList.add('open');
+    panel.setAttribute('aria-hidden', 'false');
+    trigger.setAttribute('aria-expanded', 'true');
+    if (input) setTimeout(function () { input.focus(); }, 50);
+  }
+  function closeSearch() {
+    panel.classList.remove('open');
+    panel.setAttribute('aria-hidden', 'true');
+    trigger.setAttribute('aria-expanded', 'false');
+  }
+  trigger.addEventListener('click', function () {
+    panel.classList.contains('open') ? closeSearch() : openSearch();
+  });
+  if (close) close.addEventListener('click', closeSearch);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && panel.classList.contains('open')) closeSearch();
+  });
+})();
+</script>
+
+<!-- Footer accordion JS -->
+<script>
+(function () {
+  document.querySelectorAll('.footer-accordion-trigger').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var bodyId = btn.getAttribute('aria-controls');
+      var body   = document.getElementById(bodyId);
+      if (!body) return;
+      var isOpen = body.classList.toggle('open');
+      btn.setAttribute('aria-expanded', String(isOpen));
+    });
+  });
+})();
+</script>
+
+<!-- Messenger FAB scroll-hide JS (mobile only) -->
+<script>
+(function () {
+  var fab = document.getElementById('messengerFab');
+  if (!fab) return;
+  var t = null;
+  window.addEventListener('scroll', function () {
+    if (window.innerWidth > 900) return;
+    fab.classList.add('fab--hidden');
+    clearTimeout(t);
+    t = setTimeout(function () { fab.classList.remove('fab--hidden'); }, 900);
+  }, { passive: true });
+})();
+</script>
+
 <!-- Messenger floating button -->
 <a href="https://m.me/bohubrihicosmeticsofficial1908" target="_blank" rel="noopener"
-   class="messenger-fab"
-   style="position:fixed; bottom:24px; right:24px; z-index:999; display:flex; align-items:center;
-          justify-content:center; width:56px; height:56px; border-radius:50%;
-          background:#0866ff; box-shadow:0 4px 12px rgba(0,0,0,.25); transition:transform .2s;"
-   onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"
-   title="Chat with us on Messenger">
+   class="messenger-fab" id="messengerFab"
+   title="Chat with us on Messenger" aria-label="Chat with us on Messenger">
   <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="#fff">
     <path d="M12 2C6.477 2 2 6.145 2 11.243c0 2.908 1.438 5.504 3.686 7.205V22l3.371-1.85c.9.25 1.853.384 2.943.384 5.523 0 10-4.144 10-9.242S17.523 2 12 2zm1.043 12.448l-2.55-2.72-4.976 2.72 5.473-5.808 2.612 2.72 4.913-2.72-5.472 5.808z"/>
   </svg>

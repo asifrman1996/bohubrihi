@@ -20,7 +20,7 @@
 
 <!-- ── Trust Strip ────────────────────────────────────────────────── -->
 <div class="homepage-trust-strip">
-  100% ORGANIC &nbsp;·&nbsp; NO CHEMICALS &nbsp;·&nbsp; CRUELTY FREE &nbsp;·&nbsp; MADE IN BANGLADESH
+  <span class="trust-marquee">100% ORGANIC &nbsp;·&nbsp; NO CHEMICALS &nbsp;·&nbsp; CRUELTY FREE &nbsp;·&nbsp; MADE IN BANGLADESH &nbsp;&nbsp;&nbsp;&nbsp; 100% ORGANIC &nbsp;·&nbsp; NO CHEMICALS &nbsp;·&nbsp; CRUELTY FREE &nbsp;·&nbsp; MADE IN BANGLADESH &nbsp;&nbsp;&nbsp;&nbsp;</span>
 </div>
 
 {% if featured_bundles %}
@@ -115,6 +115,9 @@
       </div>
       {% endfor %}
     </div>
+    <div class="shop-all-cta">
+      <a href="{{ url_for('shop') }}">Shop All Products <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+    </div>
   </div>
 </section>
 
@@ -125,26 +128,119 @@
     <div class="section-header">
       <h2 class="section-title">What Our <span>Customers</span> Say</h2>
     </div>
-    <div class="testimonials-grid">
-      {% for t in testimonials %}
-      <div class="testimonial-card">
-        <div class="testimonial-stars">
-          {% for i in range(t.star_rating) %}★{% endfor %}{% for i in range(5 - t.star_rating) %}<span style="opacity:.3;">★</span>{% endfor %}
+    <div class="testimonials-carousel" id="testimonialsCarousel">
+      <div class="testimonials-track" id="testimonialsTrack">
+        {% for t in testimonials %}
+        <div class="testimonial-card">
+          <div class="testimonial-stars">
+            {% for i in range(t.star_rating) %}★{% endfor %}{% for i in range(5 - t.star_rating) %}<span style="opacity:.3;">★</span>{% endfor %}
+          </div>
+          <p class="testimonial-text">"{{ t.review_text }}"</p>
+          <div class="testimonial-author">
+            {% if t.customer_photo %}
+            <img class="testimonial-photo" src="{{ image_url(t.customer_photo) }}" alt="{{ t.customer_name }}">
+            {% else %}
+            <div class="testimonial-photo testimonial-photo-placeholder">{{ t.customer_name[0].upper() }}</div>
+            {% endif %}
+            <span class="testimonial-name">{{ t.customer_name }}</span>
+          </div>
         </div>
-        <p class="testimonial-text">"{{ t.review_text }}"</p>
-        <div class="testimonial-author">
-          {% if t.customer_photo %}
-          <img class="testimonial-photo" src="{{ image_url(t.customer_photo) }}" alt="{{ t.customer_name }}">
-          {% else %}
-          <div class="testimonial-photo testimonial-photo-placeholder">{{ t.customer_name[0].upper() }}</div>
-          {% endif %}
-          <span class="testimonial-name">{{ t.customer_name }}</span>
-        </div>
+        {% endfor %}
       </div>
-      {% endfor %}
+      <div class="testimonials-dots" id="testimonialsDots"></div>
     </div>
   </div>
 </section>
 {% endif %}
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var carousel = document.getElementById('testimonialsCarousel');
+  var track    = document.getElementById('testimonialsTrack');
+  var dotsWrap = document.getElementById('testimonialsDots');
+  if (!carousel || !track || !dotsWrap) return;
+
+  var cards = track.querySelectorAll('.testimonial-card');
+  var total = cards.length;
+  if (total < 2) return;
+
+  var current = 0;
+  var dots = [];
+
+  function buildDots() {
+    dotsWrap.innerHTML = '';
+    dots = [];
+    for (var i = 0; i < total; i++) {
+      var d = document.createElement('button');
+      d.className = 'testimonials-dot' + (i === 0 ? ' active' : '');
+      d.setAttribute('aria-label', 'Testimonial ' + (i + 1));
+      d.dataset.idx = i;
+      d.addEventListener('click', function () { goTo(parseInt(this.dataset.idx)); });
+      dotsWrap.appendChild(d);
+      dots.push(d);
+    }
+  }
+
+  function goTo(idx) {
+    current = (idx + total) % total;
+    if (window.innerWidth <= 900) {
+      track.style.transform = 'translateX(-' + (current * 100) + '%)';
+    }
+    dots.forEach(function (d, i) { d.classList.toggle('active', i === current); });
+  }
+
+  buildDots();
+
+  var startX = 0, isDragging = false, moved = false;
+
+  carousel.addEventListener('touchstart', function (e) {
+    startX = e.touches[0].clientX;
+    isDragging = true;
+    moved = false;
+  }, { passive: true });
+
+  carousel.addEventListener('touchmove', function (e) {
+    if (!isDragging) return;
+    if (Math.abs(e.touches[0].clientX - startX) > 8) moved = true;
+  }, { passive: true });
+
+  carousel.addEventListener('touchend', function (e) {
+    if (!isDragging || !moved) { isDragging = false; return; }
+    var dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 40) goTo(dx < 0 ? current + 1 : current - 1);
+    isDragging = false;
+  });
+
+  carousel.addEventListener('mousedown', function (e) {
+    startX = e.clientX;
+    isDragging = true;
+    moved = false;
+    carousel.classList.add('dragging');
+  });
+  document.addEventListener('mousemove', function (e) {
+    if (!isDragging) return;
+    if (Math.abs(e.clientX - startX) > 8) moved = true;
+  });
+  document.addEventListener('mouseup', function (e) {
+    if (!isDragging) return;
+    if (moved) {
+      var dx = e.clientX - startX;
+      if (Math.abs(dx) > 40) goTo(dx < 0 ? current + 1 : current - 1);
+    }
+    isDragging = false;
+    carousel.classList.remove('dragging');
+  });
+
+  window.addEventListener('resize', function () {
+    if (window.innerWidth > 900) {
+      track.style.transform = '';
+    } else {
+      track.style.transform = 'translateX(-' + (current * 100) + '%)';
+    }
+  });
+})();
+</script>
 {% endblock %}
