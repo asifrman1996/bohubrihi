@@ -1,5 +1,6 @@
 Flask==2.3.3
 Flask-SQLAlchemy==3.0.5
+Flask-Caching==2.3.0
 SQLAlchemy==2.0.21
 Werkzeug==2.3.7
 gunicorn==21.2.0

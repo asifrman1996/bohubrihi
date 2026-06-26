@@ -36,7 +36,7 @@
       <div class="card">
         <a href="{{ url_for('bundle_detail', bid=b.id) }}" class="card__media">
           {% if b.image %}
-            <img src="{{ image_url(b.image) }}" alt="{{ b.name }}">
+            <img src="{{ sized_image_url(b.image, 400, 80) }}" alt="{{ b.name }}" loading="lazy">
           {% else %}
             <div class="product-img-placeholder">
               <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C8A0AC" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
@@ -79,7 +79,7 @@
       <div class="card">
         <a href="{{ url_for('product_detail', pid=p.id) }}" class="card__media">
           {% if p.image %}
-            <img src="{{ image_url(p.image) }}" alt="{{ p.name }}">
+            <img src="{{ sized_image_url(p.image, 400, 80) }}" alt="{{ p.name }}"{% if not loop.first %} loading="lazy"{% endif %}>
           {% else %}
             <div class="product-img-placeholder">
               <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C8A0AC" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
@@ -138,7 +138,7 @@
           <p class="testimonial-text">"{{ t.review_text }}"</p>
           <div class="testimonial-author">
             {% if t.customer_photo %}
-            <img class="testimonial-photo" src="{{ image_url(t.customer_photo) }}" alt="{{ t.customer_name }}">
+            <img class="testimonial-photo" src="{{ sized_image_url(t.customer_photo, 100, 70) }}" alt="{{ t.customer_name }}" loading="lazy">
             {% else %}
             <div class="testimonial-photo testimonial-photo-placeholder">{{ t.customer_name[0].upper() }}</div>
             {% endif %}

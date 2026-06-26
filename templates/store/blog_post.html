@@ -4,7 +4,7 @@
 {% block content %}
 <article class="blog-post-page">
   {% if post.cover_image %}
-  <img class="blog-post-cover" src="{{ image_url(post.cover_image) }}" alt="{{ post.title }}">
+  <img class="blog-post-cover" src="{{ sized_image_url(post.cover_image, 800, 85) }}" alt="{{ post.title }}" loading="lazy">
   {% endif %}
 
   <div class="blog-post-body">

@@ -25,12 +25,13 @@
       <div class="pd-gallery">
         {% set _pri_list = product_images|selectattr('is_primary')|list %}
         {% set _main_img = _pri_list[0] if _pri_list else (product_images[0] if product_images else none) %}
-        {% set _main_src = _main_img.image_url if _main_img else image_url(product.image) %}
+        {% set _main_raw = _main_img.image_url if _main_img else product.image %}
+        {% set _main_src = sized_image_url(_main_raw, 800, 85) %}
 
         <div class="pd-img-card" id="pdImgCard">
           {% if _main_src %}
           <img class="pd-img-main" src="{{ _main_src }}" alt="{{ product.name }}"
-               id="pdMainImg" onclick="openLightbox(this.src)" title="Click to enlarge">
+               id="pdMainImg" onclick="openLightbox(this.src)" title="Click to enlarge" loading="lazy">
           <button class="pd-zoom-hint" onclick="openLightbox(document.getElementById('pdMainImg').src)" aria-label="Enlarge image">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -49,8 +50,8 @@
           {% for img in product_images %}
           <button type="button"
                   class="pd-thumb{% if img.is_primary %} active{% endif %}"
-                  onclick="swapProductImage(this, '{{ img.image_url }}')">
-            <img src="{{ img.image_url }}" alt="View {{ loop.index }}">
+                  onclick="swapProductImage(this, '{{ sized_image_url(img.image_url, 800, 85) }}')">
+            <img src="{{ sized_image_url(img.image_url, 100, 70) }}" alt="View {{ loop.index }}" loading="lazy">
           </button>
           {% endfor %}
         </div>
@@ -202,7 +203,7 @@
         </div>
         {% if product.image %}
         <div class="pd-desc-img">
-          <img src="{{ image_url(product.image) }}" alt="{{ product.name }}">
+          <img src="{{ sized_image_url(product.image, 800, 85) }}" alt="{{ product.name }}" loading="lazy">
         </div>
         {% endif %}
       </div>
@@ -223,8 +224,8 @@
         <div class="card pd-related-card">
           <a href="{{ url_for('product_detail', pid=p.id) }}" class="card__media">
             {% if p.image %}
-              <img src="{{ image_url(p.image) }}" alt="{{ p.name }}"
-                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <img src="{{ sized_image_url(p.image, 400, 80) }}" alt="{{ p.name }}"
+                   loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
               <div class="product-img-placeholder product-img-letter" style="display:none">{{ p.name[0]|upper }}</div>
             {% else %}
               <div class="product-img-placeholder product-img-letter">{{ p.name[0]|upper }}</div>

@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, make_response, g
 from flask_sqlalchemy import SQLAlchemy
+from flask_caching import Cache
+from sqlalchemy.orm import selectinload
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import os, re, json, hashlib, sys
@@ -31,6 +33,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 ADMIN_PASSWORD_HASH = hashlib.sha256(b'admin123').hexdigest()
 
 db = SQLAlchemy(app)
+cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 60})
 
 
 @app.context_processor
@@ -389,6 +392,19 @@ def image_url(image):
     return url_for('static', filename='uploads/' + image)
 
 
+@app.template_global()
+def sized_image_url(image, width=None, quality=None):
+    url = image_url(image)
+    if url and 'supabase.co/storage' in url and (width or quality):
+        params = []
+        if width:
+            params.append(f'width={width}')
+        if quality:
+            params.append(f'quality={quality}')
+        url += '?' + '&'.join(params)
+    return url
+
+
 def admin_required(f):
     from functools import wraps
     @wraps(f)
@@ -497,8 +513,12 @@ def seed_data():
 # ─── Store Routes ────────────────────────────────────────────────────────────
 
 @app.route('/')
+@cache.cached(timeout=60)
 def index():
-    featured         = Product.query.filter_by(featured=True, in_stock=True).limit(4).all()
+    featured = Product.query.options(
+        selectinload(Product.category),
+        selectinload(Product.variants),
+    ).filter_by(featured=True, in_stock=True).limit(4).all()
     featured_bundles = Bundle.query.filter_by(featured=True, in_stock=True).all()
     testimonials     = Testimonial.query.filter_by(active=True).order_by(Testimonial.created_at.desc()).all()
     return render_template('store/index.html',
@@ -508,6 +528,7 @@ def index():
 
 
 @app.route('/shop')
+@cache.cached(timeout=60, query_string=True)
 def shop():
     categories = Category.query.order_by(Category.sort_order).all()
     cat_slug = request.args.get('category', '')
@@ -528,6 +549,7 @@ def shop():
 
 
 @app.route('/product/<int:pid>')
+@cache.cached(timeout=60, unless=lambda: bool(session.get('_flashes')))
 def product_detail(pid):
     product = Product.query.get_or_404(pid)
     variants = ProductVariant.query.filter_by(product_id=pid).order_by(ProductVariant.sort_order).all()
@@ -544,6 +566,7 @@ def product_detail(pid):
 
 
 @app.route('/bundle/<int:bid>')
+@cache.cached(timeout=60)
 def bundle_detail(bid):
     bundle = Bundle.query.get_or_404(bid)
     return render_template('store/bundle.html', bundle=bundle)
@@ -788,6 +811,7 @@ def admin_add_product():
                 Ingredient.id.in_([int(i) for i in ingredient_ids])
             ).all()
         db.session.commit()
+        cache.clear()
         flash(f'"{product.name}" added successfully!', 'success')
         return redirect(url_for('admin_products'))
     return render_template('admin/product_form.html', product=None, categories=categories,
@@ -823,6 +847,7 @@ def admin_edit_product(pid):
             Ingredient.id.in_([int(i) for i in ingredient_ids])
         ).all() if ingredient_ids else []
         db.session.commit()
+        cache.clear()
         flash(f'"{product.name}" updated successfully!', 'success')
         return redirect(url_for('admin_products'))
     faqs = ProductFAQ.query.filter_by(product_id=pid).order_by(ProductFAQ.sort_order).all()
@@ -840,6 +865,7 @@ def admin_delete_product(pid):
     name = product.name
     db.session.delete(product)
     db.session.commit()
+    cache.clear()
     flash(f'"{name}" deleted.', 'success')
     return redirect(url_for('admin_products'))
 
@@ -917,6 +943,7 @@ def admin_add_category():
                        sort_order=Category.query.count() + 1)
         db.session.add(cat)
         db.session.commit()
+        cache.clear()
         flash(f'Category "{name}" added.', 'success')
     else:
         flash('Category already exists.', 'error')
@@ -932,6 +959,7 @@ def admin_delete_category(cid):
     else:
         db.session.delete(cat)
         db.session.commit()
+        cache.clear()
         flash(f'Category "{cat.name}" deleted.', 'success')
     return redirect(url_for('admin_categories'))
 
@@ -995,6 +1023,7 @@ def admin_add_bundle():
         for product, qty in items:
             db.session.add(BundleItem(bundle_id=bundle.id, product_id=product.id, quantity=qty))
         db.session.commit()
+        cache.clear()
         flash(f'Bundle "{bundle.name}" created successfully!', 'success')
         return redirect(url_for('admin_bundles'))
     return render_template('admin/bundle_form.html', bundle=None,
@@ -1029,6 +1058,7 @@ def admin_edit_bundle(bid):
         for product, qty in items:
             db.session.add(BundleItem(bundle_id=bundle.id, product_id=product.id, quantity=qty))
         db.session.commit()
+        cache.clear()
         flash(f'Bundle "{bundle.name}" updated successfully!', 'success')
         return redirect(url_for('admin_bundles'))
     selected_items = [{'product_id': bi.product_id, 'qty': bi.quantity} for bi in bundle.items]
@@ -1044,6 +1074,7 @@ def admin_delete_bundle(bid):
     name = bundle.name
     db.session.delete(bundle)
     db.session.commit()
+    cache.clear()
     flash(f'Bundle "{name}" deleted.', 'success')
     return redirect(url_for('admin_bundles'))
 
@@ -1070,6 +1101,7 @@ def admin_settings():
                 if url:
                     set_setting('logo_url', url)
                     db.session.commit()
+                    cache.clear()
                     flash('Logo updated successfully!', 'success')
                 else:
                     flash('Upload failed. Check Supabase is configured and the file is a valid image (PNG, JPG, WEBP).', 'error')
@@ -1108,6 +1140,7 @@ def admin_site_settings_general():
                 value = request.form.get(key, '').strip()
             set_setting(key, value)
         db.session.commit()
+        cache.clear()
         flash('Site settings saved.', 'success')
         return redirect(url_for('admin_site_settings_general'))
     settings = {key: get_setting(key) for key in SETTING_KEYS}
@@ -1438,6 +1471,7 @@ def admin_add_product_faq(pid):
         faq = ProductFAQ(product_id=pid, question=q, answer=a, sort_order=count)
         db.session.add(faq)
         db.session.commit()
+        cache.clear()
         flash('FAQ added.', 'success')
     else:
         flash('Question and answer are both required.', 'error')
@@ -1450,6 +1484,7 @@ def admin_delete_product_faq(pid, fid):
     faq = ProductFAQ.query.filter_by(id=fid, product_id=pid).first_or_404()
     db.session.delete(faq)
     db.session.commit()
+    cache.clear()
     flash('FAQ deleted.', 'success')
     return redirect(url_for('admin_edit_product', pid=pid))
 
@@ -1471,6 +1506,7 @@ def admin_add_product_variant(pid):
                        original_price=original_price, in_stock=in_stock, sort_order=count)
     db.session.add(v)
     db.session.commit()
+    cache.clear()
     flash('Variant added.', 'success')
     return redirect(url_for('admin_edit_product', pid=pid))
 
@@ -1481,6 +1517,7 @@ def admin_delete_product_variant(pid, vid):
     v = ProductVariant.query.filter_by(id=vid, product_id=pid).first_or_404()
     db.session.delete(v)
     db.session.commit()
+    cache.clear()
     flash('Variant deleted.', 'success')
     return redirect(url_for('admin_edit_product', pid=pid))
 
@@ -1502,6 +1539,7 @@ def admin_upload_product_image(pid):
     if is_primary:
         product.image = url
     db.session.commit()
+    cache.clear()
     return jsonify({'success': True, 'image': {
         'id': img.id, 'image_url': img.image_url,
         'is_primary': img.is_primary, 'sort_order': img.sort_order,
@@ -1524,6 +1562,7 @@ def admin_delete_product_image(pid, iid):
             if product:
                 product.image = first.image_url
             db.session.commit()
+    cache.clear()
     return jsonify({'success': True})
 
 
@@ -1537,6 +1576,7 @@ def admin_set_primary_product_image(pid, iid):
     if product:
         product.image = img.image_url
     db.session.commit()
+    cache.clear()
     return jsonify({'success': True})
 
 
@@ -1549,6 +1589,7 @@ def admin_reorder_product_images(pid):
         if img:
             img.sort_order = item.get('sort_order', 0)
     db.session.commit()
+    cache.clear()
     return jsonify({'success': True})
 
 
