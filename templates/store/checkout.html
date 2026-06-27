@@ -74,14 +74,14 @@
           <div style="display:flex; justify-content:space-between; font-size:.9rem; color:var(--muted); margin-bottom:6px;">
             <span>Subtotal</span><span id="summarySubtotal">৳0</span>
           </div>
-          <div id="summaryBundleRow" style="display:none; justify-content:space-between; font-size:.9rem; color:#16a34a; font-weight:600; margin-bottom:6px;">
-            <span>🎁 Bundle Discount (10%)</span><span id="summaryBundleAmt">−৳0</span>
-          </div>
           <div style="display:flex; justify-content:space-between; font-size:.9rem; color:var(--muted); margin-bottom:10px;">
             <span>Delivery</span><span id="summaryDelivery">—</span>
           </div>
           <div style="display:flex; justify-content:space-between; font-weight:800; font-size:1.1rem; color:var(--navy);">
             <span>Total</span><span id="summaryTotal">৳0</span>
+          </div>
+          <div id="summarySavingsRow" style="display:none; font-size:.85rem; color:#16a34a; font-weight:600; margin-top:10px; text-align:center; padding-top:8px; border-top:1px dashed #d1fae5;">
+            You saved <span id="summarySavingsAmt">৳0</span> on this order
           </div>
         </div>
       </div>
@@ -92,19 +92,10 @@
 
 {% block scripts %}
 <script>
-function bundleSavings(cart) {
-  const catQty = {}, catSub = {};
-  cart.forEach(item => {
-    catQty[item.cat] = (catQty[item.cat] || 0) + item.qty;
-    catSub[item.cat]  = (catSub[item.cat]  || 0) + item.price * item.qty;
-  });
-  let savings = 0;
-  for (const cat in catQty) { if (catQty[cat] >= 3) savings += catSub[cat] * 0.10; }
-  return savings;
-}
+const origPrices = {{ orig_prices | tojson }};
 
-function deliveryCharge(city, discountedSubtotal) {
-  if (discountedSubtotal >= 2500) return 0;
+function deliveryCharge(city, subtotal) {
+  if (subtotal >= 2500) return 0;
   if (city === 'dhaka') return 70;
   if (city === 'sub-urban') return 100;
   if (city === 'outside') return 130;
@@ -124,29 +115,48 @@ function refreshSummary() {
 
   let html = '';
   let subtotal = 0;
+  let totalSavings = 0;
+
   cart.forEach(item => {
+    const itemType = item.type || 'product';
+    const key = `${itemType}_${item.id}`;
+    const origPrice = origPrices[key];
     const sub = item.price * item.qty;
     subtotal += sub;
-    html += `<div class="summary-item"><span>${item.name} × ${item.qty}</span><span>৳${sub.toFixed(0)}</span></div>`;
+
+    if (origPrice && origPrice > item.price) {
+      totalSavings += (origPrice - item.price) * item.qty;
+      html += `<div class="summary-item">
+        <span>${item.name} × ${item.qty}</span>
+        <span style="text-align:right;">
+          <s style="color:var(--muted);font-weight:400;font-size:.85em;">৳${(origPrice * item.qty).toFixed(0)}</s>
+          <span style="color:var(--maroon);font-weight:700;margin-left:4px;">৳${sub.toFixed(0)}</span>
+        </span>
+      </div>`;
+    } else {
+      html += `<div class="summary-item"><span>${item.name} × ${item.qty}</span><span>৳${sub.toFixed(0)}</span></div>`;
+    }
   });
   wrap.innerHTML = html;
 
-  const savings  = bundleSavings(cart);
-  const discounted = subtotal - savings;
-  const delivery = deliveryCharge(city, discounted);
-  const total    = discounted + delivery;
+  const delivery = deliveryCharge(city, subtotal);
+  const total = subtotal + delivery;
 
   document.getElementById('summarySubtotal').textContent = '৳' + subtotal.toFixed(0);
-  const bundleRow = document.getElementById('summaryBundleRow');
-  if (savings > 0) {
-    bundleRow.style.display = 'flex';
-    document.getElementById('summaryBundleAmt').textContent = '−৳' + savings.toFixed(0);
-  } else {
-    bundleRow.style.display = 'none';
-  }
   document.getElementById('summaryDelivery').textContent =
-    delivery === 0 ? '✅ Free' : '৳' + delivery;
+    delivery === 0 ? 'Free' : '৳' + delivery;
   document.getElementById('summaryTotal').textContent = '৳' + total.toFixed(0);
+
+  const savingsRow = document.getElementById('summarySavingsRow');
+  if (savingsRow) {
+    if (totalSavings > 0) {
+      savingsRow.style.display = 'block';
+      document.getElementById('summarySavingsAmt').textContent = '৳' + totalSavings.toFixed(0);
+    } else {
+      savingsRow.style.display = 'none';
+    }
+  }
+
   document.getElementById('cartDataInput').value = JSON.stringify(cart);
 }
 

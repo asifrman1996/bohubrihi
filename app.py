@@ -609,19 +609,8 @@ def checkout():
             flash('Your cart is empty.', 'error')
             return redirect(url_for('cart'))
         subtotal = sum(i['price'] * i['qty'] for i in items)
-        # 10% bundle discount per category when 3+ items from same category
-        from collections import defaultdict
-        cat_qty = defaultdict(int)
-        cat_sub = defaultdict(float)
-        for i in items:
-            cat_qty[i.get('cat', '')] += i['qty']
-            cat_sub[i.get('cat', '')] += i['price'] * i['qty']
-        bundle_savings = sum(
-            cat_sub[c] * 0.10 for c, q in cat_qty.items() if q >= 3
-        )
-        discounted = subtotal - bundle_savings
         zone = request.form.get('zone', '').strip().lower()
-        if discounted >= 2500:
+        if subtotal >= 2500:
             delivery = 0
         elif zone == 'dhaka':
             delivery = 70
@@ -629,7 +618,7 @@ def checkout():
             delivery = 100
         else:
             delivery = 130
-        total = discounted + delivery
+        total = subtotal + delivery
         order = Order(
             customer_name=request.form['name'],
             customer_email=request.form['email'],
@@ -644,7 +633,14 @@ def checkout():
         db.session.commit()
         notify_slack_order(order, items)
         return redirect(url_for('order_success', oid=order.id))
-    return render_template('store/checkout.html')
+    orig_prices = {}
+    for p in Product.query.with_entities(Product.id, Product.price, Product.original_price).all():
+        if p.original_price and p.original_price > p.price:
+            orig_prices[f'product_{p.id}'] = p.original_price
+    for b in Bundle.query.with_entities(Bundle.id, Bundle.price, Bundle.original_price).all():
+        if b.original_price and b.original_price > b.price:
+            orig_prices[f'bundle_{b.id}'] = b.original_price
+    return render_template('store/checkout.html', orig_prices=orig_prices)
 
 
 @app.route('/about')

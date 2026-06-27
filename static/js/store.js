@@ -12,6 +12,13 @@ function updateCartUI() {
     el.textContent = count;
     el.style.display = count > 0 ? 'inline-flex' : 'none';
   });
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const btn = document.getElementById('goCheckoutBtn');
+  if (btn) {
+    btn.textContent = count > 0
+      ? `Checkout (${count} item${count !== 1 ? 's' : ''}) · ৳${total.toFixed(0)}`
+      : 'Proceed to Checkout';
+  }
   renderCartItems();
 }
 
