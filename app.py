@@ -260,7 +260,7 @@ def notify_slack_order(order, items):
             lines.append(f"{idx}.{item['name']}{weight} - {item['qty']} pcs")
         text = (
             f"#{order.id}\n\n"
-            f"Paid amount: {order.total:.0f}tk\n\n"
+            f"Amount due (COD): {order.total:.0f}tk\n\n"
             f"Name: {order.customer_name}\n\n"
             f"Number: {order.customer_phone}\n\n"
             f"Address:\n"
